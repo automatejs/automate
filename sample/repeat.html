@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>m-repeat</title>
+</head>
+<body>
+    <div id="app">
+       <ul>
+           <li *m-repeat="item in items" *m-bind="item"></li>
+       </ul>
+       <button @click="add()">add</button>
+    </div>
+    <script src="../dist//automate.js"></script>
+    <script>
+        automate.bootstrap('#app', {
+            construct: function() {
+                var count = 10000;
+
+                this.items = [];
+
+                while (count > 0) {
+                    this.items.push('item ' + count);
+                    count--;
+                }
+            },
+            methods: {
+                add: function() {
+                    this.items.delegate(function (e) {
+                       e.push('new');
+                    });
+                },
+                change: function () {
+                    this.items.delegate(function (e) {
+                       e[1] = 'change';
+                    });
+                }
+            }
+        });
+    </script>
+</body>
+</html>

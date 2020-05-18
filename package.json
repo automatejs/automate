@@ -1,0 +1,33 @@
+{
+  "name": "automate",
+  "version": "0.0.1",
+  "description": "",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "watch": "webpack --watch --env.NODE_ENV=dev",
+    "build": "webpack --env.NODE_ENV=dev --progress --profile --colors",
+    "build:dev": "webpack --env.NODE_ENV=dev --progress --profile --colors",
+    "build:prod": "webpack --env.NODE_ENV=prod --progress --profile --colors"
+  },
+  "keywords": [
+    "mvvm",
+    "component"
+  ],
+  "author": "Gavin",
+  "license": "MIT",
+  "devDependencies": {
+    "@babel/core": "^7.6.2",
+    "@babel/plugin-proposal-class-properties": "^7.5.5",
+    "@babel/plugin-proposal-decorators": "^7.6.0",
+    "@babel/preset-env": "^7.6.2",
+    "babel-loader": "^8.0.0-beta.0",
+    "css-loader": "^3.2.0",
+    "mini-css-extract-plugin": "^0.8.0",
+    "optimize-css-assets-webpack-plugin": "^5.0.3",
+    "raw-loader": "^3.1.0",
+    "terser-webpack-plugin": "^2.2.1",
+    "webpack": "^4.41.0",
+    "webpack-cli": "^3.3.6"
+  }
+}
