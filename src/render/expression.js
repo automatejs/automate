@@ -1,37 +1,28 @@
-import * as utils from '../utils';
 import { Evaluator } from '../exp';
 
 export class Expression {
-    constructor(scope, text, locals) {
-        this.scope = scope;
+    constructor(text) {
         this.text = text;
-        this.locals = locals;
-    }
-
-    mergeLocals(locals) {
-        return utils.merge({}, this.locals, locals);
     }
 
     // get value
-    compute(locals) {
-        var evaluator = new Evaluator(this.scope, this.mergeLocals(locals));
+    compute(scope, locals) {
+        var evaluator = new Evaluator(scope, locals);
         return evaluator.evaluate(this.text);
     }
 
     // set value
-    assign(value, locals) {
-        var evaluator = new Evaluator(this.scope, this.mergeLocals(locals), {
-            assignInterceptor: function (target, key) {
-                target.delegate(e => {
-                    e[key] = value;
-                });
+    assign(scope, value, locals) {
+        var evaluator = new Evaluator(scope, locals, {
+            assignInterceptor(target, key) {
+                target.toProxy()[key] = value;
             }
         });
-        evaluator.evaluate(this.text, value);
+        evaluator.assign(this.text, value);
     }
 
-    watch(handler) {
-        return this.scope.$watchExp(this.text, handler);
+    watch(scope, handler, locals) {
+        return scope.$watch(this.text, handler, locals);
     }
 
     destroy() {

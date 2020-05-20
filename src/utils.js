@@ -19,9 +19,6 @@ function forEach(obj, action, ignoreOwn) {
             }
         }
     }
-    else {
-        action(obj, obj);
-    }
 }
 
 function some(obj, action) {
@@ -42,7 +39,7 @@ function some(obj, action) {
         }
     }
     else {
-        return action(obj, obj);
+        return false;
     }
 }
 
@@ -246,6 +243,12 @@ function isSame(obj1, obj2) {
     }
 
     return same;
+}
+
+function isEmpty(value) {
+    return !isObject(value) || !some(value, function () {
+        return true;
+    });
 }
 
 function debug(log) {
@@ -462,6 +465,7 @@ export {
     isArray,
     isString,
     isSame,
+    isEmpty,
     isFormData,
     debug,
     contains,

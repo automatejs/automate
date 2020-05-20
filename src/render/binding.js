@@ -21,7 +21,7 @@ export class Binding {
     }
 
     createExpression(text) {
-        var exp = new Expression(this.scope, text, this.locals);
+        var exp = new Expression(text);
         this.expressions.push(exp);
         return exp;
     }
@@ -66,10 +66,10 @@ export class Binding {
         this.detect();
 
         this.expressions.forEach(exp => {
-           exp.watch(() => {
+           exp.watch(this.scope,() => {
                 this.detect();
                 this.scope.$patch();
-            });
+            }, this.locals);
         });
     }
 
@@ -84,8 +84,10 @@ export class Binding {
 
     // get value
     compute(locals) {
+        locals = utils.merge(this.locals, locals);
+
         if(this.expressed) {
-            return this.expressions[0].compute(locals);
+            return this.expressions[0].compute(this.scope, locals);
         }
 
         return this.segments.reduce((prev, cur) => {
@@ -93,20 +95,19 @@ export class Binding {
                 return prev + cur;
             }
             // it is a expression
-            return prev + cur.compute(locals);
+            return prev + cur.compute(this.scope, locals);
         }, '');
     }
 
     // set value
     assign(value, locals) {
-        var evaluator = new Evaluator(this.scope, locals, {
-            assignInterceptor: function (target, key) {
-                target.delegate(e => {
-                    e[key] = value;
-                });
-            }
-        });
-        evaluator.evaluate(this.text, value);
+        locals = utils.merge(this.locals, locals);
+
+        if (this.expressed) {
+            this.expressions[0].assign(this.scope, value, locals);
+        } else {
+            throw new Error(this.text + ' is not valid expression');
+        }
     }
 
     registerAutomation(automation) {

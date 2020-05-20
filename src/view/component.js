@@ -19,9 +19,9 @@ export function componentConstructor(data) {
     this.$$observer = new Observer(this);
     this.$$evaluator = new Evaluator(this);
     this.$$delayer = new Delayer(this.$$doPatch);
-    this.$display = 'block';
+    this.$display = 'inherit';
     this.$setData(data);
-    injector.injectServices(this);
+    injector.injectServices(this, this.$$data);
 }
 
 export class Component {
@@ -31,13 +31,13 @@ export class Component {
 
     $setData(data) {
         if (data != null) {
-            // create properties
-            if (utils.isFunction(data.construct)) {
-                data.construct.call(this, Message);
-            }
             // create methods
             if (utils.isObject(data.methods)) {
                 utils.extend(this, data.methods);
+            }
+            // create properties
+            if (utils.isFunction(data.construct)) {
+                data.construct.call(this, Message);
             }
         }
 
@@ -45,33 +45,33 @@ export class Component {
     }
 
     $hasComponent(key) {
-        return this.$$injector.hasComponent(key);
+        return this.$$injector.hasComponent(key, this.$$data.alias);
     }
 
     $newComponent(key) {
-        var child = this.$$injector.createComponent(key);
+        var child = this.$$injector.createComponent(key, this.$$data.alias);
         child.$$parent = this;
         this.$$children.push(child);
         return child;
     }
 
     $hasDirective(key) {
-        return this.$$injector.hasDirective(key);
+        return this.$$injector.hasDirective(key, this.$$data.alias);
     }
 
     $newDirective(key) {
-        var directive = this.$$injector.createDirective(key);
+        var directive = this.$$injector.createDirective(key, this.$$data.alias);
         directive.$$scope = this;
         this.$$directives.push(directive);
         return directive;
     }
 
     $hasFilter(key) {
-        return this.$$injector.hasFilter(key);
+        return this.$$injector.hasFilter(key, this.$$data.alias);
     }
 
     $getFilter(key) {
-        return  this.$$injector.createFilter(key);
+        return  this.$$injector.createFilter(key, this.$$data.alias);
     }
 
     $hasAttribute(key) {
@@ -82,7 +82,7 @@ export class Component {
         var oldValue = utils.getProperty(this, key, true);
 
         if (oldValue !== value) {
-            utils.setProperty(this.delegate(), key, value, true);
+            utils.setProperty(this.toProxy(), key, value, true);
         }
     }
 
@@ -108,20 +108,12 @@ export class Component {
         }
     }
 
-    $watch(key, action) {
-        return this.$$observer.watch(this, key, action);
+    $watch(exp, handler, locals) {
+        return this.$$observer.watchExp(this, exp, handler, locals);
     }
 
-    $validate(key, action) {
-        return this.$$observer.validate(this, key, action);
-    }
-
-    $watchExp(exp, handler) {
-        return this.$$observer.watchExp(this, exp, handler);
-    }
-
-    $watchCollection(exp, handler) {
-        return this.$$observer.watchCollection(this, exp, handler);
+    $watchCollection(exp, handler, locals) {
+        return this.$$observer.watchCollection(this, exp, handler, locals);
     }
 
     $eval(exp) {

@@ -1,4 +1,4 @@
-import { Directive, Component } from '../view';
+import { Directive, Delayer } from '../view';
 import { directive } from '../decorator';
 import { TplBuilder } from '../tpl';
 import { Render } from '../render';
@@ -45,10 +45,14 @@ class RepeatDirective extends Directive {
         fragment.appendChild(this.render(scope));
         fragment.appendChild(footer);
 
-        scope.$watchCollection(this.itemsExp, () => {
-            fragment = this.render(scope);
+        this.delayer = new Delayer(() => {
+            var fragment = this.render(scope);
             helper.removeNodeBetween(header, footer);
             footer.parentNode.insertBefore(fragment, footer);
+        });
+
+        scope.$watchCollection(this.itemsExp, () => {
+            this.delayer.execute(this);
         });
 
         return fragment;
@@ -64,8 +68,10 @@ class RepeatDirective extends Directive {
             locals['$key'] = key;
             locals['$index'] = key;
             locals[self.itemExp] = item;
+
             var render = new Render(scope, locals);
             var itemContent = render.render(self.itemTemplate);
+
             fragment.appendChild(itemContent);
         });
 
@@ -73,6 +79,8 @@ class RepeatDirective extends Directive {
     }
 
     onDestroy() {
-
+        if(this.delayer != null) {
+            this.delayer.destroy();
+        }
     }
 }

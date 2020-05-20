@@ -16,6 +16,10 @@ export class Directive {
         return this.$$vattr.velm.elm;
     }
 
+    get $component() {
+        return this.$$vattr.velm.data.component;
+    }
+
     get $binding() {
         return this.$$vattr.data.binding;
     }

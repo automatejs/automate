@@ -63,7 +63,7 @@ export class Evaluator {
                 throw new Error(utils.format('{0} is null or undefined', this.builder.build(assignment.property)));
             }
 
-            if (this.assignInterceptor == null) {
+            if (this.options.assignInterceptor == null) {
                 target[key] = value;
             }
             else {
@@ -71,9 +71,9 @@ export class Evaluator {
             }
         }
         else if (assignment.type === AST.Identifier) {
-            var key = this.evaluateNode(assignment);
+            var key = this.builder.build(assignment);
 
-            if (this.assignInterceptor == null) {
+            if (this.options.assignInterceptor == null) {
                 this.scope[key] = value;
             }
             else {

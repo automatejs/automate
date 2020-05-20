@@ -1,4 +1,4 @@
-import { events } from '../core';
+import { events, getTarget } from '../core';
 import * as utils from '../utils';
 import { Watcher } from './watcher';
 import { Evaluator, Analyser } from '../exp';
@@ -69,7 +69,7 @@ export class Observer {
     }
 
     watch(target, key, action) {
-        var watcher = this.getOrCreateWatcher(this.listeners, target);
+        var watcher = this.getOrCreateWatcher(this.listeners, getTarget(target));
 
         watcher.registerKey(key, action);
 
@@ -79,7 +79,7 @@ export class Observer {
     }
 
     validate(target, key, action) {
-        var watcher = this.getOrCreateWatcher(this.validators, target);
+        var watcher = this.getOrCreateWatcher(this.validators, getTarget(target));
 
         watcher.registerKey(key, action);
 
@@ -88,9 +88,9 @@ export class Observer {
         };
     }
 
-    watchExp(scope, exp, handler) {
+    watchExp(scope, exp, handler, locals) {
         var self = this;
-        var analyser = new Analyser(exp);
+        var analyser = new Analyser(exp, locals);
         var evaluator = new Evaluator(scope, {}, {
             allowNull: true
         });
@@ -129,13 +129,15 @@ export class Observer {
 
         analyser.analyse();
         watchAccessors(analyser.accessors, scope);
+        locals && watchAccessors(analyser.localAccessors, locals);
 
         return function () {
             unwatchAccessors(analyser.accessors);
+            locals && unwatchAccessors(analyser.localAccessors);
         };
     }
 
-    watchCollection(scope, exp, handler) {
+    watchCollection(scope, exp, handler, locals) {
         var self = this, evaluator = new Evaluator(scope, {}, {
             allowNull: true
         });
@@ -146,7 +148,7 @@ export class Observer {
             }
             unwatchProps = watchProps();
             handler.apply(this, arguments);
-        });
+        }, locals);
 
         function watchProps() {
             var collection = evaluator.evaluate(exp);

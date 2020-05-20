@@ -26,6 +26,7 @@ export class Analyser {
         this.program = null;
         this.builder = new ExpBuilder();
         this.accessors = {};
+        this.localAccessors = {};
     }
 
     createAccessor(key, callee, exp) {
@@ -34,6 +35,14 @@ export class Analyser {
         }
 
         return this.accessors[key];
+    }
+
+    createLocalAccessor(key, callee, exp) {
+        if (!this.localAccessors[key]) {
+            this.localAccessors[key] = new Accessor(callee, exp);
+        }
+
+        return this.localAccessors[key];
     }
 
     analyse() {
@@ -163,8 +172,8 @@ export class Analyser {
             return context.parent.createChild(key, callee);
         }
 
-        if(this.locals[identifier.name]) {
-            return;
+        if(this.locals[key]) {
+            return this.createLocalAccessor(key, callee);
         }
 
         return this.createAccessor(key, callee);

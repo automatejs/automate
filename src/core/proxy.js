@@ -1,19 +1,32 @@
 import { events } from './events';
 import * as utils from '../utils';
 
-class ProxyHandler {
-    constructor() {
-    }
+var isProxySymbol = Symbol('__isProxy'),
+    targetSymbol = Symbol('__target');
+
+var handler = {
+    get(target, key) {
+        if(key === isProxySymbol) {
+            return true;
+        }
+
+        if(key === targetSymbol) {
+            return target;
+        }
+
+        return target[key];
+    },
 
     set(target, key, value) {
-        var oldValue = target[key];
+        var oldValue = getTarget(target[key]),
+            newValue = getTarget(value);
 
-        if (oldValue !== value || (utils.isArray(target) && key === 'length')) {
+        if (oldValue !== newValue) {
             var validation = {
                 valid: true,
                 apply: true,
                 oldValue: oldValue,
-                newValue: value
+                newValue: newValue
             };
 
             events.propChanging.fire({
@@ -29,13 +42,32 @@ class ProxyHandler {
                     key: key,
                     data: {
                         oldValue: oldValue,
-                        newValue: value
+                        newValue: newValue
                     }
                 });
             }
         }
+        else if(target[key] !== value) {
+            target[key] = value;
+        }
 
         return true;
+    }
+};
+
+export function isProxy(proxy) {
+    return utils.isObject(proxy) && proxy[isProxySymbol];
+}
+
+export function getTarget(proxy) {
+    return isProxy(proxy) ? proxy[targetSymbol] : proxy;
+}
+
+function updateProxy(target, key) {
+    var value = target[key];
+
+    if (utils.isObject(value) && !isProxy(value)) {
+        getTarget(target)[key] = new Proxy(value, handler);
     }
 }
 
@@ -173,29 +205,7 @@ class ArrayAgent extends Agent {
     }
 }
 
-var proxyHandler = new ProxyHandler();
-
-Object.prototype.delegate = function(handler) {
-    var proxy;
-
-    if(utils.isDefined(Proxy)) {
-        proxy = new Proxy(this, proxyHandler);
-    }
-    else {
-        if(utils.isArray(this)) {
-            proxy = new ArrayAgent(this);
-        }
-        else if(utils.isObject(this)) {
-            proxy = new Agent(this);
-        }
-        else {
-            proxy = this;
-        }
-    }
-
-    if(handler) {
-        handler.call(this, proxy);
-    }
-
-    return proxy;
+// extends object prototype, add function toProxy
+Object.prototype.toProxy = function() {
+    return isProxy(this) ? this : new Proxy(this, handler);
 };

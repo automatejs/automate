@@ -20,9 +20,8 @@
             },
             methods: {
                 change: function () {
-                    this.delegate(function (e) {
-                       e.value++;
-                    });
+                    var p = this.toProxy();
+                    p.value++;
                 }
             }
         });

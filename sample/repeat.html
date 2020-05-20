@@ -8,32 +8,38 @@
 <body>
     <div id="app">
        <ul>
-           <li *m-repeat="item in items" *m-bind="item"></li>
+           <li *m-repeat="item in items" *m-bind="item.value"></li>
        </ul>
-       <button @click="add()">add</button>
+       <button @click="addItem()">add</button>
+        <button @click="sort()">add</button>
     </div>
     <script src="../dist//automate.js"></script>
     <script>
         automate.bootstrap('#app', {
             construct: function() {
-                var count = 10000;
-
                 this.items = [];
-
-                while (count > 0) {
-                    this.items.push('item ' + count);
-                    count--;
-                }
+                this.makeItems(2);
             },
             methods: {
-                add: function() {
-                    this.items.delegate(function (e) {
-                       e.push('new');
-                    });
+                makeItem: function() {
+                    return {
+                        value: Math.round(Math.random() * 1000)
+                    };
                 },
-                change: function () {
-                    this.items.delegate(function (e) {
-                       e[1] = 'change';
+                makeItems: function(count) {
+                    while (count > 0){
+                        this.items.push(this.makeItem());
+                        count--;
+                    }
+                },
+                addItem: function() {
+                    var p = this.items.toProxy();
+                    p.push(this.makeItem());
+                },
+                sort: function () {
+                    var p = this.items.toProxy();
+                    p.sort(function (a, b) {
+                        return a.value - b.value;
                     });
                 }
             }
