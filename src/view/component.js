@@ -3,14 +3,12 @@ import { isMessage, Message } from '../core';
 import { Observer } from '../observer';
 import { Render } from '../render';
 import { injector } from './injector';
-import { Delayer } from './delayer';
 import { Evaluator } from '../exp';
 
 export function componentConstructor(data) {
     this.$$data = null;
     this.$$velm = null;
     this.$$fragment = null;
-    this.$$bindings = [];
     this.$$parent = null;
     this.$$children = [];
     this.$$directives = [];
@@ -18,7 +16,6 @@ export function componentConstructor(data) {
     this.$$render = new Render(this);
     this.$$observer = new Observer(this);
     this.$$evaluator = new Evaluator(this);
-    this.$$delayer = new Delayer(this.$$doPatch);
     this.$display = 'inherit';
     this.$setData(data);
     injector.injectServices(this, this.$$data);
@@ -109,11 +106,11 @@ export class Component {
     }
 
     $watch(exp, handler, locals) {
-        return this.$$observer.watchExp(this, exp, handler, locals);
+        return this.$$observer.watch(exp, handler, locals);
     }
 
     $watchCollection(exp, handler, locals) {
-        return this.$$observer.watchCollection(this, exp, handler, locals);
+        return this.$$observer.watchCollection(exp, handler, locals);
     }
 
     $eval(exp) {
@@ -161,18 +158,7 @@ export class Component {
 
     }
 
-    $patch() {
-        this.$$delayer.execute(this);
-    }
-
-    $$doPatch() {
-        this.$$bindings.forEach(e => {
-            e.patch();
-        });
-    }
-
     $destroy() {
-        this.$$delayer.destroy();
         this.$$observer.destroy();
 
         this.$$children.forEach(child => {
@@ -183,14 +169,9 @@ export class Component {
             item.$destroy();
         });
 
-        this.$$bindings.forEach(item => {
-            item.destroy();
-        });
-
         this.onDestroy && this.onDestroy();
         this.$$parent = null;
         this.$$children.length = 0;
         this.$$directives.length = 0;
-        this.$$bindings.length = 0;
     }
 }

@@ -1,4 +1,4 @@
-import { Message } from './message';
+import { Message } from '../core';
 
 export var events = {
     propChanging: new Message(),

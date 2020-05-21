@@ -68,7 +68,7 @@ export class Binding {
         this.expressions.forEach(exp => {
            exp.watch(this.scope,() => {
                 this.detect();
-                this.scope.$patch();
+                this.patch();
             }, this.locals);
         });
     }

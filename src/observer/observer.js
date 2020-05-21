@@ -1,99 +1,86 @@
-import { events, getTarget } from '../core';
 import * as utils from '../utils';
-import { Watcher } from './watcher';
 import { Evaluator, Analyser } from '../exp';
+import { Watcher } from './watcher';
+import { Delayer } from './delayer';
+
+class Listener {
+    constructor(exp, handler, value) {
+        this.exp = exp;
+        this.handler = handler;
+        this.value = value;
+        this.newValue = value;
+        this.valueChanged = false;
+        this.collectionChanged = false;
+    }
+
+    setNewValue(value) {
+        this.newValue = value;
+        this.valueChanged = true;
+    }
+
+    setCollectionChanged(value) {
+        this.collectionChanged = value;
+    }
+
+    hasChange() {
+        return this.valueChanged || this.collectionChanged;
+    }
+
+    notify(scope) {
+        var oldValue = this.value,
+            newValue = this.newValue,
+            collectionChanged = this.collectionChanged;
+
+        this.value = this.newValue;
+        this.collectionChanged = false;
+
+        this.handler.call(scope, {
+            oldValue: oldValue,
+            newValue: newValue,
+            collectionChanged: collectionChanged
+        });
+    }
+}
 
 export class Observer {
-    constructor() {
-        this.onPropChanging = args => {
-            this.handlePropChanging(args);
-        };
-
-        this.onPropChanged = args => {
-            this.handlePropChanged(args);
-        };
-
+    constructor(scope) {
         this.listeners = [];
-        this.validators = [];
-        this.init();
+        this.scope = scope;
+        this.watcher = new Watcher();
+        this.delayer = new Delayer(this.notify);
     }
 
-    init() {
-        events.propChanging.on(this.onPropChanging);
-        events.propChanged.on(this.onPropChanged);
+    createListener(evaluator, exp, handler) {
+        var value = evaluator.evaluate(exp);
+        var listener = new Listener(exp, handler, value);
+        this.listeners.push(listener);
+        return listener;
     }
 
-    handlePropChanging(args) {
-        var watcher = this.getWatcher(this.validators, args.target);
-
-        if (watcher != null) {
-            watcher.fireKey(args.key, args);
-        }
-    }
-
-    handlePropChanged(args) {
-        var watcher = this.getWatcher(this.listeners, args.target);
-
-        if (watcher != null) {
-            watcher.fireKey(args.key, args);
-            watcher.fireKey('*', args);
-        }
-    }
-
-    getWatcher(watchers, target) {
-        var watcher, filters = watchers.filter(item => {
-            return item.target === target;
+    notify() {
+        this.listeners.forEach(listener => {
+            if(listener.hasChange()) {
+                listener.notify(this.scope);
+            }
         });
+    }
 
-        if (filters.length > 0) {
-            watcher = filters[0];
+    notifyChange(listener, newValue) {
+        if (newValue) {
+            listener.setNewValue(newValue);
+        } else {
+            listener.setCollectionChanged(true);
         }
-
-        return watcher;
+        this.delayer.execute(this);
     }
 
-    createWatcher(watchers, target) {
-        var watcher = new Watcher(target);
-        watchers.push(watcher);
-        return watcher;
-    }
-
-    getOrCreateWatcher(watchers, target) {
-        var watcher = this.getWatcher(watchers, target);
-
-        if (watcher == null) {
-            watcher = this.createWatcher(watchers, target);
-        }
-
-        return watcher;
-    }
-
-    watch(target, key, action) {
-        var watcher = this.getOrCreateWatcher(this.listeners, getTarget(target));
-
-        watcher.registerKey(key, action);
-
-        return function () {
-            watcher.unregisterKey(key, action);
-        };
-    }
-
-    validate(target, key, action) {
-        var watcher = this.getOrCreateWatcher(this.validators, getTarget(target));
-
-        watcher.registerKey(key, action);
-
-        return function () {
-            watcher.unregisterKey(key, action);
-        };
-    }
-
-    watchExp(scope, exp, handler, locals) {
+    watch(exp, handler, locals) {
         var self = this;
         var analyser = new Analyser(exp, locals);
-        var evaluator = new Evaluator(scope, {}, {
+        var evaluator =  new Evaluator(this.scope, locals, {
             allowNull: true
         });
+        var listener = this.createListener(evaluator, exp, handler);
 
         function unwatchAccessors(accessors) {
             utils.forEach(accessors, function (item) {
@@ -115,12 +102,10 @@ export class Observer {
                     key = evaluator.evaluate(key);
                 }
 
-                item.unwatch = self.watch(target, key, function (args) {
+                item.unwatch = self.watcher.watch(target, key, function (args) {
                     unwatchAccessors(item.children);
                     watchAccessors(item.children, args.data.newValue);
-                    handler.call(this, {
-                        newValue: evaluator.evaluate(exp)
-                    });
+                    self.notifyChange(listener, evaluator.evaluate(exp));
                 });
 
                 watchAccessors(item.children, target[key]);
@@ -128,7 +113,7 @@ export class Observer {
         }
 
         analyser.analyse();
-        watchAccessors(analyser.accessors, scope);
+        watchAccessors(analyser.accessors, this.scope);
         locals && watchAccessors(analyser.localAccessors, locals);
 
         return function () {
@@ -137,24 +122,28 @@ export class Observer {
         };
     }
 
-    watchCollection(scope, exp, handler, locals) {
-        var self = this, evaluator = new Evaluator(scope, {}, {
-            allowNull: true
-        });
+    watchCollection(exp, handler, locals) {
+        var self = this,
+            evaluator =  new Evaluator(this.scope, locals, {
+                allowNull: true
+            });
         var unwatchProps = watchProps();
-        var unwatchExp = this.watchExp(scope, exp, () => {
+        var unwatchExp = this.watch(exp, () => {
             if (unwatchProps != null) {
                 unwatchProps.call(this);
             }
             unwatchProps = watchProps();
             handler.apply(this, arguments);
         }, locals);
+        var listener = this.createListener(evaluator, exp, handler);
 
         function watchProps() {
             var collection = evaluator.evaluate(exp);
 
             if (utils.isObject(collection) || utils.isArray(collection)) {
-                return self.watch(collection, '*', handler);
+                return self.watcher.watch(collection, '*', function () {
+                    self.notifyChange(listener);
+                });
             }
         }
 
@@ -165,10 +154,9 @@ export class Observer {
     }
 
     destroy() {
+        this.delayer.destroy();
+        this.watcher.destroy();
+        this.scope = null;
         this.listeners.length = 0;
-        this.validators.length = 0;
-
-        events.propChanging.off(this.onPropChanging);
-        events.propChanged.off(this.onPropChanged);
     }
 }

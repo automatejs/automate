@@ -40,9 +40,7 @@ export class Render {
     }
 
     createBinding(text) {
-        var binding = new Binding(this.scope, text, this.locals);
-        this.scope.$$bindings.push(binding);
-        return binding;
+        return new Binding(this.scope, text, this.locals);
     }
 
     render(tpl) {

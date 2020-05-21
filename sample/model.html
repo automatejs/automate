@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>m-model</title>
+</head>
+
+<body>
+<div id="app">
+    <div>name:<span *m-bind="name"></span></div>
+    <input type="text" *m-model="name" />
+    <input type="text" *m-model="name" />
+</div>
+<script src="../dist//automate.js"></script>
+<script>
+    automate.bootstrap('#app', {
+        construct: function () {
+            this.name = 'model directive';
+        },
+        methods: {
+
+        }
+    });
+</script>
+</body>
+
+</html>
