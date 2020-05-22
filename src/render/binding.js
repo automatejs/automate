@@ -1,4 +1,5 @@
 import * as utils from '../utils';
+import { Evaluator } from '../exp';
 import { Expression } from './expression';
 
 export class Binding {
@@ -18,6 +19,11 @@ export class Binding {
         this.changed = false;
         this.segments = [];
         this.expressions = [];
+        this.evaluator = new Evaluator(this.scope, {
+            assignInterceptor(target, key) {
+                target.toProxy()[key] = value;
+            }
+        });
     }
 
     createExpression(text) {
@@ -87,7 +93,7 @@ export class Binding {
         locals = utils.merge(this.locals, locals);
 
         if(this.expressed) {
-            return this.expressions[0].compute(this.scope, locals);
+            return this.expressions[0].compute(this.evaluator, locals);
         }
 
         return this.segments.reduce((prev, cur) => {
@@ -104,7 +110,7 @@ export class Binding {
         locals = utils.merge(this.locals, locals);
 
         if (this.expressed) {
-            this.expressions[0].assign(this.scope, value, locals);
+            this.expressions[0].assign(this.evaluator, value, locals);
         } else {
             throw new Error(this.text + ' is not valid expression');
         }

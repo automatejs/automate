@@ -4,22 +4,37 @@ import { parseExp } from './exp-api';
 import { ExpBuilder } from './exp-builder';
 
 export class Evaluator {
-    constructor(scope, locals, options) {
-        this.scope = scope;
-        this.locals = locals || {};
+    constructor(scope, options) {
+        this.locals = null;
         this.program = null;
+        this.scope = scope;
         this.options = utils.merge({
             allowNull: false,
             assignInterceptor: null
         }, options);
         this.builder = new ExpBuilder();
+        this.buffer = {};
+    }
+
+    parse(exp) {
+        var program = this.buffer[exp];
+        if (!program) {
+            program = parseExp(exp);
+            this.buffer[exp] = program;
+        }
+        return program;
     }
 
     // get value from expression
-    evaluate(exp) {
+    evaluate(exp, locals) {
+        return this.evaluateProgram(this.parse(exp), locals);
+    }
+
+    evaluateProgram(program, locals) {
         var result;
 
-        this.program = parseExp(exp);
+        this.program = program;
+        this.locals = locals;
 
         this.program.childNodes.forEach(child => {
             result = this.evaluateNode(child);
@@ -33,8 +48,13 @@ export class Evaluator {
     }
 
     // set value to expression
-    assign(exp, value) {
-        this.program = parseExp(exp);
+    assign(exp, value, locals) {
+        return this.assignProgram(this.parse(exp), value, locals);
+    }
+
+    assignProgram(program, value, locals) {
+        this.program = program;
+        this.locals = locals;
 
         if (this.program.childNodes.length !== 1) {
             throw new Error(utils.format('{0} is not a valid assignment', exp));
@@ -51,7 +71,7 @@ export class Evaluator {
         if (assignment.type === AST.MemberExpression) {
             var target = this.evaluateNode(assignment.object);
 
-            if(target == null) {
+            if (target == null) {
                 throw new Error(utils.format('{0} is null or undefined', this.builder.build(assignment.object)));
             }
 
@@ -59,7 +79,7 @@ export class Evaluator {
                 propertyKey: !assignment.computed
             });
 
-            if(key == null) {
+            if (key == null) {
                 throw new Error(utils.format('{0} is null or undefined', this.builder.build(assignment.property)));
             }
 
@@ -149,7 +169,7 @@ export class Evaluator {
         });
         var value = this.evaluateNode(assignment.right);
 
-        if(this.options.assignInterceptor == null) {
+        if (this.options.assignInterceptor == null) {
             target.obj[target.prop] = value;
         }
         else {
@@ -262,7 +282,7 @@ export class Evaluator {
         });
 
         if (call.filter) {
-            if(this.scope.$hasFilter(context.prop)){
+            if (this.scope.$hasFilter(context.prop)) {
                 var filter = this.scope.$getFilter(context.prop);
                 return filter.execute.apply(filter, argValues);
             }
@@ -301,10 +321,10 @@ export class Evaluator {
 
     evaluateIdentifier(identifier, context) {
         var target;
-        
+
         context = context || {};
 
-        if(context.targetNode == null){
+        if (context.targetNode == null) {
             target = this.scope;
         }
         else {

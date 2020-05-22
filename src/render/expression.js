@@ -1,4 +1,3 @@
-import { Evaluator } from '../exp';
 
 export class Expression {
     constructor(text) {
@@ -6,19 +5,13 @@ export class Expression {
     }
 
     // get value
-    compute(scope, locals) {
-        var evaluator = new Evaluator(scope, locals);
-        return evaluator.evaluate(this.text);
+    compute(evaluator, locals) {
+        return evaluator.evaluate(this.text, locals);
     }
 
     // set value
-    assign(scope, value, locals) {
-        var evaluator = new Evaluator(scope, locals, {
-            assignInterceptor(target, key) {
-                target.toProxy()[key] = value;
-            }
-        });
-        evaluator.assign(this.text, value);
+    assign(evaluator, value, locals) {
+        evaluator.assign(this.text, value, locals);
     }
 
     watch(scope, handler, locals) {

@@ -60,7 +60,7 @@ function copy() {
         var newArr = [];
         obj.forEach(function (item, index) {
             if (filter == null || filter(obj, index, item)) {
-                newArr.push(deep ? copy(item) : item);
+                newArr.push(deep ? copy(deep, item) : item);
             }
         });
         return newArr;
@@ -70,7 +70,7 @@ function copy() {
         var newObj = object(obj);
         forEach(obj, function (value, key) {
             if (filter == null || filter(obj, key, value)) {
-                newObj[key] = deep ? copy(value) : value;
+                newObj[key] = deep ? copy(deep, value) : value;
             }
         });
         return newObj;

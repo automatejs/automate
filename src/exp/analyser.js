@@ -20,37 +20,41 @@ class Accessor {
 }
 
 export class Analyser {
-    constructor(exp, locals) {
-        this.exp = exp;
-        this.locals = locals || {};
+    constructor() {
         this.program = null;
+        this.accessor = {};
         this.builder = new ExpBuilder();
-        this.accessors = {};
-        this.localAccessors = {};
+        this.buffer = {};
     }
 
     createAccessor(key, callee, exp) {
-        if (!this.accessors[key]) {
-            this.accessors[key] = new Accessor(callee, exp);
+        if (!this.accessor[key]) {
+            this.accessor[key] = new Accessor(callee, exp);
         }
 
-        return this.accessors[key];
+        return this.accessor[key];
     }
 
-    createLocalAccessor(key, callee, exp) {
-        if (!this.localAccessors[key]) {
-            this.localAccessors[key] = new Accessor(callee, exp);
+    parse(exp) {
+        var program = this.buffer[exp];
+        if (!program) {
+            program = parseExp(exp);
+            this.buffer[exp] = program;
         }
-
-        return this.localAccessors[key];
+        return program;
     }
 
-    analyse() {
-        this.program = parseExp(this.exp);
+    analyse(exp) {
+        return this.analyseProgram(this.parse(exp));
+    }
 
-        this.program.childNodes.forEach(child => {
+    analyseProgram(program) {
+        this.accessor = {};
+        this.program = program;
+        program.childNodes.forEach(child => {
             this.analyseNode(child);
         });
+        return this.accessor;
     }
 
     analyseNode(node, context) {
@@ -136,7 +140,7 @@ export class Analyser {
             this.analyseNode(arg);
         });
 
-        if(!call.filter) {
+        if (!call.filter) {
             this.analyseNode(call.callee, { callee: true });
         }
     }
@@ -172,17 +176,13 @@ export class Analyser {
             return context.parent.createChild(key, callee);
         }
 
-        if(this.locals[key]) {
-            return this.createLocalAccessor(key, callee);
-        }
-
         return this.createAccessor(key, callee);
     }
 
     analyseLiteral(literal, context) {
         var key = this.builder.build(literal);
 
-        if(context && context.parent) {
+        if (context && context.parent) {
             return context.parent.createChild(key);
         }
     }
