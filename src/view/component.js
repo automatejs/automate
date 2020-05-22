@@ -1,5 +1,5 @@
 import * as utils from '../utils';
-import { isMessage, Message } from '../core';
+import { isMessage } from '../core';
 import { Observer } from '../observer';
 import { Render } from '../render';
 import { injector } from './injector';
@@ -27,17 +27,6 @@ export class Component {
     }
 
     $setData(data) {
-        if (data != null) {
-            // create methods
-            if (utils.isObject(data.methods)) {
-                utils.extend(this, data.methods);
-            }
-            // create properties
-            if (utils.isFunction(data.construct)) {
-                data.construct.call(this, Message);
-            }
-        }
-
         this.$$data = utils.merge(this.$$metadata, data);
     }
 

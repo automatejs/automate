@@ -87,7 +87,7 @@ export class Evaluator {
                 target[key] = value;
             }
             else {
-                this.options.assignInterceptor.call(this, target, key);
+                this.options.assignInterceptor.call(this, target, key, value);
             }
         }
         else if (assignment.type === AST.Identifier) {
@@ -97,7 +97,7 @@ export class Evaluator {
                 this.scope[key] = value;
             }
             else {
-                this.options.assignInterceptor.call(this, this.scope, key);
+                this.options.assignInterceptor.call(this, this.scope, key, value);
             }
         }
         else {
@@ -173,7 +173,7 @@ export class Evaluator {
             target.obj[target.prop] = value;
         }
         else {
-            this.options.assignInterceptor.call(this, target.obj, target.prop);
+            this.options.assignInterceptor.call(this, target.obj, target.prop, value);
         }
     }
 

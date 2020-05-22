@@ -10,10 +10,10 @@ export class Factory {
 
     }
 
-    rename(roleId, key) {
-        if (pattern.test(key)) {
+    rename(roleId, name) {
+        if (pattern.test(name)) {
             var newName = '';
-            var segments = key.split('-');
+            var segments = name.split('-');
 
             segments.forEach(function (segment) {
                 newName += utils.uppercase(segment[0]) + segment.substring(1);
@@ -36,51 +36,53 @@ export class Factory {
 
             return newName;
         } else {
-            throw new Error(key + 'is not a valid name');
+            throw new Error(name + 'is not a valid name');
         }
     }
 
-    make(roleId, metadata) {
-        var constructor, constructorName = this.rename(roleId, metadata.key),
+    make(roleId, name, config) {
+        var constructor, constructorName = this.rename(roleId, name),
             onConstruct = function () {
                 if (utils.isFunction(constructor.super)) {
                     constructor.super.call(this);
                 }
                 // create properties
-                if (utils.isFunction(metadata.construct)) {
-                    metadata.construct.call(this, Message);
+                if (utils.isFunction(config.construct)) {
+                    config.construct.call(this, Message);
                 }
             };
 
         constructor = new Function('onConstruct', '"use strict";return function ' + constructorName + '(){onConstruct.call(this);};')(onConstruct);
 
         // extends class
-        if (utils.isFunction(metadata.extends)) {
-            utils.inherit(constructor, metadata.extends);
+        if (utils.isFunction(config.extends)) {
+            utils.inherit(constructor, config.extends);
         }
 
         // create methods
-        if (utils.isObject(metadata.methods)) {
-            utils.extend(constructor.prototype, metadata.methods);
+        for (var key in config) {
+            if (config.hasOwnProperty(key) && key !== 'extends' && key !== 'construct') {
+                constructor.prototype[key] = config[key];
+            }
         }
 
         return constructor;
     }
 
-    makeComponent(metadata) {
-        return this.make(roles.component, metadata);
+    makeComponent(name, config) {
+        return this.make(roles.component, name, config);
     }
 
-    makeDirective(metadata) {
-        return this.make(roles.directive, metadata);
+    makeDirective(name, config) {
+        return this.make(roles.directive, name, config);
     }
 
-    makeFilter(metadata) {
-        return this.make(roles.filter, metadata);
+    makeFilter(name, config) {
+        return this.make(roles.filter, name, config);
     }
 
-    makeService(metadata) {
-        return this.make(roles.service, metadata);
+    makeService(name, config) {
+        return this.make(roles.service, name, config);
     }
 }
 

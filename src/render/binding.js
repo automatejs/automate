@@ -20,7 +20,7 @@ export class Binding {
         this.segments = [];
         this.expressions = [];
         this.evaluator = new Evaluator(this.scope, {
-            assignInterceptor(target, key) {
+            assignInterceptor(target, key, value) {
                 target.toProxy()[key] = value;
             }
         });

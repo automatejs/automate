@@ -1,49 +1,50 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>m-repeat</title>
 </head>
+
 <body>
     <div id="app">
-       <ul>
-           <li *m-repeat="item in items" *m-bind="item.value"></li>
-       </ul>
-       <button @click="addItem()">add</button>
+        <ul>
+            <li *m-repeat="item in items" *m-bind="item.value"></li>
+        </ul>
+        <button @click="addItem()">add</button>
         <button @click="sort()">add</button>
     </div>
     <script src="../dist//automate.js"></script>
     <script>
         automate.bootstrap('#app', {
-            construct: function() {
+            construct: function () {
                 this.items = [];
                 this.makeItems(1000);
             },
-            methods: {
-                makeItem: function() {
-                    return {
-                        value: Math.round(Math.random() * 1000)
-                    };
-                },
-                makeItems: function(count) {
-                    while (count > 0){
-                        this.items.push(this.makeItem());
-                        count--;
-                    }
-                },
-                addItem: function() {
-                    var p = this.items.toProxy();
-                    p.push(this.makeItem());
-                },
-                sort: function () {
-                    var p = this.items.toProxy();
-                    p.sort(function (a, b) {
-                        return a.value - b.value;
-                    });
+            makeItem: function () {
+                return {
+                    value: Math.round(Math.random() * 1000)
+                };
+            },
+            makeItems: function (count) {
+                while (count > 0) {
+                    this.items.push(this.makeItem());
+                    count--;
                 }
+            },
+            addItem: function () {
+                var p = this.items.toProxy();
+                p.push(this.makeItem());
+            },
+            sort: function () {
+                var p = this.items.toProxy();
+                p.sort(function (a, b) {
+                    return a.value - b.value;
+                });
             }
         });
     </script>
 </body>
+
 </html>
