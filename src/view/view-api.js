@@ -1,41 +1,11 @@
-import { Component, componentConstructor } from './component';
-import { Directive, directiveConstructor } from './directive';
-import { Filter, filterConstructor } from './filter';
-import { Service, serviceConstructor } from './service';
+
 import { factory } from './factory';
 import { injector } from './injector';
 import * as helper from '../helper';
-import * as utils from '../utils';
-
-// start make constructor function because class can't be call without new.
-var componentClass = (function () {
-    return function Component(metadata) {
-        componentConstructor.call(this, metadata);
-    };
-})();
-componentClass.prototype = Component.prototype;
-
-var directiveClass = (function () {
-    return function Directive(metadata) {
-        directiveConstructor.call(this, metadata);
-    };
-})();
-directiveClass.prototype = Directive.prototype;
-
-var filterClass = (function () {
-    return function Filter(metadata) {
-        filterConstructor.call(this, metadata);
-    };
-})();
-filterClass.prototype = Filter.prototype;
-
-var serviceClass = (function () {
-    return function Service(metadata) {
-        serviceConstructor.call(this, metadata)
-    };
-})();
-serviceClass.prototype = Service.prototype;
-// end of make constructor function because class can't be call without new.
+import { Component } from './component';
+import { Directive } from './directive';
+import { Filter } from './filter';
+import { Service } from './service';
 
 function namespace(name) {
     return {
@@ -59,30 +29,26 @@ function namespace(name) {
 }
 
 function component(key, config, metadata) {
-    config.extends = componentClass;
-    var constructor = factory.makeComponent(key, config);
-    injector.registerComponent(key, constructor, metadata);
+    var constructor = factory.makeComponent(key, config, metadata);
+    injector.registerComponent(key, constructor);
     return constructor;
 }
 
 function directive(key, config, metadata) {
-    config.extends = directiveClass;
-    var constructor = factory.makeDirective(key, config);
-    injector.registerDirective(key, constructor, metadata);
+    var constructor = factory.makeDirective(key, config, metadata);
+    injector.registerDirective(key, constructor);
     return constructor;
 }
 
 function filter(key, config, metadata) {
-    config.extends = filterClass;
-    var constructor = factory.makeFilter(key, config);
-    injector.registerFilter(key, constructor, metadata);
+    var constructor = factory.makeFilter(key, config, metadata);
+    injector.registerFilter(key, constructor);
     return constructor;
 }
 
 function service(key, config, metadata) {
-    config.extends = serviceClass;
-    var constructor = factory.makeService(key, config);
-    injector.registerService(key, constructor, metadata);
+    var constructor = factory.makeService(key, config, metadata);
+    injector.registerService(key, constructor);
     return constructor;
 }
 
@@ -103,16 +69,15 @@ function isService(instance) {
 }
 
 function bootstrap(selector, config) {
-    config.extends = componentClass;
     var element = document.querySelector(selector);
-    var App = factory.makeComponent('root', config);
-    var app = new App();
-    app.$setData({
+    var Root = factory.makeComponent('root', config, {
         template: element.innerHTML
     });
+    var root = new Root();
+    
     helper.clearChildNodes(element);
-    app.$render();
-    app.$mount(element);
+    root.$render();
+    root.$mount(element);
 }
 
 export {

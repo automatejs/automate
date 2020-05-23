@@ -199,8 +199,8 @@ export class Render {
 
             if (vattr.velm.isComponent) {
                 vattr.data.binding.registerAutomation(function (value) {
-                    if (vattr.velm.component.$hasAttribute(vattr.data.key)) {
-                        vattr.velm.component.$setAttribute(vattr.data.key, value);
+                    if (vattr.velm.component.$hasProperty(vattr.data.key)) {
+                        vattr.velm.component.$setProperty(vattr.data.key, value);
                     }
                     else {
                         setHtmlAttr(value);

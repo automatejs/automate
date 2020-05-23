@@ -1,8 +1,42 @@
 import * as utils from '../utils';
 import { Message } from '../core';
 import { roles } from './roles';
+import { Component, componentConstructor } from './component';
+import { Directive, directiveConstructor } from './directive';
+import { Filter, filterConstructor } from './filter';
+import { Service, serviceConstructor } from './service';
 
 var pattern = /^[a-z_\$][\w\$-]*/i;
+
+// start make constructor function because class can't be call without new.
+var componentClass = (function () {
+    return function Component(metadata) {
+        componentConstructor.call(this, metadata);
+    };
+})();
+componentClass.prototype = Component.prototype;
+
+var directiveClass = (function () {
+    return function Directive(metadata) {
+        directiveConstructor.call(this, metadata);
+    };
+})();
+directiveClass.prototype = Directive.prototype;
+
+var filterClass = (function () {
+    return function Filter(metadata) {
+        filterConstructor.call(this, metadata);
+    };
+})();
+filterClass.prototype = Filter.prototype;
+
+var serviceClass = (function () {
+    return function Service(metadata) {
+        serviceConstructor.call(this, metadata)
+    };
+})();
+serviceClass.prototype = Service.prototype;
+// end of make constructor function because class can't be call without new.
 
 // constructor factory, create constructor for component, directive, filter and service
 export class Factory {
@@ -40,7 +74,7 @@ export class Factory {
         }
     }
 
-    make(roleId, name, config) {
+    make(roleId, name, config, metadata) {
         var constructor, constructorName = this.rename(roleId, name),
             onConstruct = function () {
                 if (utils.isFunction(constructor.super)) {
@@ -66,23 +100,31 @@ export class Factory {
             }
         }
 
+        // store metadata to prototype
+        metadata.key = name;
+        constructor.prototype.$$metadata = metadata;
+
         return constructor;
     }
 
-    makeComponent(name, config) {
-        return this.make(roles.component, name, config);
+    makeComponent(name, config, metadata) {
+        config.extends = componentClass;
+        return this.make(roles.component, name, config, metadata);
     }
 
-    makeDirective(name, config) {
-        return this.make(roles.directive, name, config);
+    makeDirective(name, config, metadata) {
+        config.extends = directiveClass;
+        return this.make(roles.directive, name, config, metadata);
     }
 
-    makeFilter(name, config) {
-        return this.make(roles.filter, name, config);
+    makeFilter(name, config, metadata) {
+        config.extends = filterClass;
+        return this.make(roles.filter, name, config, metadata);
     }
 
-    makeService(name, config) {
-        return this.make(roles.service, name, config);
+    makeService(name, config, metadata) {
+        config.extends = serviceClass;
+        return this.make(roles.service, name, config, metadata);
     }
 }
 

@@ -20,7 +20,7 @@
         automate.bootstrap('#app', {
             construct: function () {
                 this.items = [];
-                this.makeItems(1000);
+                this.makeItems(10000);
             },
             makeItem: function () {
                 return {
@@ -34,12 +34,11 @@
                 }
             },
             addItem: function () {
-                var p = this.items.toProxy();
-                p.push(this.makeItem());
+                var item = this.makeItem();
+                this.delegate(this.items).push(item);
             },
             sort: function () {
-                var p = this.items.toProxy();
-                p.sort(function (a, b) {
+                this.delegate(this.items).sort(function (a, b) {
                     return a.value - b.value;
                 });
             }

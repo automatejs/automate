@@ -19,9 +19,11 @@ export class Binding {
         this.changed = false;
         this.segments = [];
         this.expressions = [];
+        var self = this;
         this.evaluator = new Evaluator(this.scope, {
             assignInterceptor(target, key, value) {
-                target.toProxy()[key] = value;
+                var p = self.scope.delegate(target);
+                p[key] = value;
             }
         });
     }

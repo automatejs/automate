@@ -6,7 +6,8 @@ import { injector } from './injector';
 import { Evaluator } from '../exp';
 
 export function componentConstructor(data) {
-    this.$$data = null;
+    this.props = {};
+    this.events = {};
     this.$$velm = null;
     this.$$fragment = null;
     this.$$parent = null;
@@ -17,17 +18,33 @@ export function componentConstructor(data) {
     this.$$observer = new Observer(this);
     this.$$evaluator = new Evaluator(this);
     this.$display = 'inherit';
-    this.$setData(data);
+    this.$$data = this.$initData(data);
     injector.injectServices(this, this.$$data);
 }
 
 export class Component {
-    constructor(data) {
-        componentConstructor.call(this, data);
+    delegate(target) {
+        if (target == null) {
+            target = this;
+        }
+
+        if (utils.isObject(target)) {
+            return target.toProxy();
+        }
+
+        throw new Error('target is not a object');
+    }
+
+    constructor() {
+        componentConstructor.call(this);
+    }
+
+    $initData(data) {
+        return utils.merge(this.$$metadata, data);
     }
 
     $setData(data) {
-        this.$$data = utils.merge(this.$$metadata, data);
+        utils.extend(this.$$data, data);
     }
 
     $hasComponent(key) {
@@ -57,40 +74,42 @@ export class Component {
     }
 
     $getFilter(key) {
-        return  this.$$injector.createFilter(key, this.$$data.alias);
+        return this.$$injector.createFilter(key, this.$$data.alias);
     }
 
-    $hasAttribute(key) {
-        return utils.hasProperty(this, key, true);
+    $hasProperty(key) {
+        return utils.hasProperty(this.props, key, true);
     }
 
-    $setAttribute(key, value) {
-        var oldValue = utils.getProperty(this, key, true);
+    $getProperty(key) {
+        return utils.getProperty(this.props, key, true);
+    }
+
+    $setProperty(key, value) {
+        var oldValue = utils.getProperty(this.props, key, true);
 
         if (oldValue !== value) {
-            utils.setProperty(this.toProxy(), key, value, true);
+            utils.setProperty(this.delegate(this.props), key, value, true);
         }
     }
 
-    $bind(message, handler) {
-        var message = utils.getProperty(this, message, true);
+    $hasMessage(key) {
+        return utils.hasProperty(this.events, key, true);
+    }
+
+    $bind(key, handler) {
+        var message = utils.getProperty(this.events, key, true);
 
         if (isMessage(message)) {
             message.on(handler);
         }
-        else {
-            throw new Error(message + ' is not a message');
-        }
     }
 
-    $unbind(event, handler) {
-        var message = utils.getProperty(this, message, true);
+    $unbind(key, handler) {
+        var message = utils.getProperty(this.events, key, true);
 
         if (isMessage(message)) {
             message.off(handler);
-        }
-        else {
-            throw new Error(message + ' is not a message');
         }
     }
 

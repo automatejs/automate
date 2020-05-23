@@ -19,8 +19,9 @@
                 this.value = 1;
             },
             change: function () {
-                var p = this.toProxy();
-                p.value++;
+                var self = this.delegate();
+                
+                self.value++;
             }
         });
     </script>

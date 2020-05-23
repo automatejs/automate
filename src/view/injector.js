@@ -23,14 +23,10 @@ export class Injector {
         return this.instanceContainer[roleId];
     }
 
-    register(roleId, key, constructor, metadata) {
+    register(roleId, key, constructor) {
         if (key.indexOf('.') !== -1) {
             throw new Error('Illegal character "."');
         }
-
-        // store metadata to prototype
-        metadata.key = key;
-        constructor.prototype.$$metadata = metadata;
 
         var container = this.getClassContainer(roleId);
 

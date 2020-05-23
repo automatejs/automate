@@ -5,71 +5,14 @@ var isProxySymbol = Symbol('__isProxy'),
     targetSymbol = Symbol('__target');
 
 var handler = {
-    get(target, key) {
-        if(key === isProxySymbol) {
-            return true;
-        }
-
-        if(key === targetSymbol) {
-            return target;
-        }
-
-        return target[key];
-    },
-
-    set(target, key, value) {
-        var oldValue = getTarget(target[key]),
-            newValue = getTarget(value);
-
-        if (oldValue !== newValue) {
-            var validation = {
-                valid: true,
-                apply: true,
-                oldValue: oldValue,
-                newValue: newValue
-            };
-
-            events.propChanging.fire({
-                target: target,
-                key: key,
-                data: validation
-            });
-
-            if (validation.apply) {
-                target[key] = value;
-                events.propChanged.fire({
-                    target: target,
-                    key: key,
-                    data: {
-                        oldValue: oldValue,
-                        newValue: newValue
-                    }
-                });
-            }
-        }
-        else if(target[key] !== value) {
-            target[key] = value;
-        }
-
-        return true;
-    }
+    get: getProxy,
+    set: setProxy
 };
 
-export function isProxy(proxy) {
-    return utils.isObject(proxy) && proxy[isProxySymbol];
-}
-
-export function getTarget(proxy) {
-    return isProxy(proxy) ? proxy[targetSymbol] : proxy;
-}
-
-function updateProxy(target, key) {
-    var value = target[key];
-
-    if (utils.isObject(value) && !isProxy(value)) {
-        getTarget(target)[key] = new Proxy(value, handler);
-    }
-}
+// extends object prototype, add function toProxy
+Object.prototype.toProxy = function () {
+    return isProxy(this) ? this : new Proxy(this, handler);
+};
 
 class Agent {
     constructor(target, handler) {
@@ -112,13 +55,13 @@ class ArrayAgent extends Agent {
     pop() {
         var result, length = this.target.length;
 
-        if(length === 0){
+        if (length === 0) {
             return;
         }
 
         length--;
 
-        if(length >= 0 ){
+        if (length >= 0) {
             result = this.target[length];
         }
 
@@ -130,7 +73,7 @@ class ArrayAgent extends Agent {
     push() {
         var length = this.target.length;
 
-        if(arguments.length > 0){
+        if (arguments.length > 0) {
             Array.prototype.slice.call(arguments, 0).forEach((item, index) => {
                 this.handler.set(this.target, length + index, item);
             });
@@ -143,15 +86,15 @@ class ArrayAgent extends Agent {
     }
 
     reverse() {
-        if(this.target.length === 0){
+        if (this.target.length === 0) {
             return;
         }
 
         var copy = utils.copy(this.target);
         copy.reverse();
         copy.forEach((item, index) => {
-           if(item !== this.target[index]) {
-            this.handler.set(this.target, index, item);
+            if (item !== this.target[index]) {
+                this.handler.set(this.target, index, item);
             }
         });
     }
@@ -159,7 +102,7 @@ class ArrayAgent extends Agent {
     shift() {
         var length = this.target.length;
 
-        if(length > 0){
+        if (length > 0) {
             var result = this.target[length - 1];
             var index = 1;
 
@@ -192,12 +135,12 @@ class ArrayAgent extends Agent {
         var result = Array.prototype.slice.apply(copy, args);
 
         copy.forEach((item, index) => {
-           if(item !== this.target[index]) {
-            this.handler.set(this.target, index, this.target[index]);
+            if (item !== this.target[index]) {
+                this.handler.set(this.target, index, this.target[index]);
             }
         });
 
-        if(copy.length !== length) {
+        if (copy.length !== length) {
             this.handler.set(this.target, 'length', copy.length);
         }
 
@@ -205,7 +148,72 @@ class ArrayAgent extends Agent {
     }
 }
 
-// extends object prototype, add function toProxy
-Object.prototype.toProxy = function() {
-    return isProxy(this) ? this : new Proxy(this, handler);
-};
+function isProxy(proxy) {
+    return utils.isObject(proxy) && proxy[isProxySymbol];
+}
+
+function getTarget(proxy) {
+    return isProxy(proxy) ? proxy[targetSymbol] : proxy;
+}
+
+function updateProxy(target, key) {
+    var value = target[key];
+
+    if (utils.isObject(value) && !isProxy(value)) {
+        getTarget(target)[key] = new Proxy(value, handler);
+    }
+}
+
+function getProxy(target, key) {
+    if (key === isProxySymbol) {
+        return true;
+    }
+
+    if (key === targetSymbol) {
+        return target;
+    }
+
+    return target[key];
+}
+
+function setProxy(target, key, value) {
+    var oldValue = getTarget(target[key]),
+        newValue = getTarget(value);
+
+    if (oldValue !== newValue) {
+        var validation = {
+            valid: true,
+            apply: true,
+            oldValue: oldValue,
+            newValue: newValue
+        };
+
+        events.propChanging.fire({
+            target: target,
+            key: key,
+            data: validation
+        });
+
+        if (validation.apply) {
+            target[key] = value;
+            events.propChanged.fire({
+                target: target,
+                key: key,
+                data: {
+                    oldValue: oldValue,
+                    newValue: newValue
+                }
+            });
+        }
+    }
+    else if (target[key] !== value) {
+        target[key] = value;
+    }
+
+    return true;
+}
+
+export {
+    isProxy,
+    getTarget
+}
