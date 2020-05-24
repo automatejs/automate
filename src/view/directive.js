@@ -24,6 +24,10 @@ export class Directive {
         return this.$$vattr.data.binding;
     }
 
+    get $evaluator() {
+        return this.$binding.evaluator;
+    }
+
     constructor(meatadata) {
         directiveConstructor.call(this, meatadata);
     }

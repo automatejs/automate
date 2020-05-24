@@ -1,9 +1,8 @@
 import * as utils from '../utils';
-import { Evaluator } from '../exp';
 import { Expression } from './expression';
 
 export class Binding {
-    constructor(scope, text, locals) {
+    constructor(scope, text, locals, evaluator) {
         this.scope = scope;
         this.text = text;
         this.locals = locals;
@@ -19,13 +18,7 @@ export class Binding {
         this.changed = false;
         this.segments = [];
         this.expressions = [];
-        var self = this;
-        this.evaluator = new Evaluator(this.scope, {
-            assignInterceptor(target, key, value) {
-                var p = self.scope.delegate(target);
-                p[key] = value;
-            }
-        });
+        this.evaluator = evaluator;
     }
 
     createExpression(text) {
@@ -35,7 +28,7 @@ export class Binding {
     }
 
     compile() {
-        if(this.messaged || this.assigned) {
+        if (this.messaged || this.assigned) {
             this.expressed = true;
         }
 
@@ -67,14 +60,14 @@ export class Binding {
     }
 
     link() {
-        if(this.assigned || this.messaged) {
+        if (this.assigned || this.messaged) {
             return;
         }
 
         this.detect();
 
         this.expressions.forEach(exp => {
-           exp.watch(this.scope,() => {
+            exp.watch(this.scope, () => {
                 this.detect();
                 this.patch();
             }, this.locals);
@@ -84,7 +77,7 @@ export class Binding {
     detect() {
         var newValue = this.compute();
 
-        if(this.value != newValue) {
+        if (this.value != newValue) {
             this.changed = true;
             this.value = newValue;
         }
@@ -94,12 +87,12 @@ export class Binding {
     compute(locals) {
         locals = utils.merge(this.locals, locals);
 
-        if(this.expressed) {
+        if (this.expressed) {
             return this.expressions[0].compute(this.evaluator, locals);
         }
 
         return this.segments.reduce((prev, cur) => {
-            if(utils.isString(cur)) {
+            if (utils.isString(cur)) {
                 return prev + cur;
             }
             // it is a expression
@@ -123,14 +116,14 @@ export class Binding {
     }
 
     unregisterAutomation(automation) {
-        if(this.automation === automation){
+        if (this.automation === automation) {
             this.automation = null;
         }
     }
 
     // modify view according to model
     patch() {
-        if(this.changed && this.automation != null) {
+        if (this.changed && this.automation != null) {
             this.changed = false;
             this.automation.call(this, this.value);
         }

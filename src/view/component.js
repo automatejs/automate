@@ -16,7 +16,12 @@ export function componentConstructor(data) {
     this.$$injector = injector;
     this.$$render = new Render(this);
     this.$$observer = new Observer(this);
-    this.$$evaluator = new Evaluator(this);
+    this.$$evaluator = new Evaluator(this,  {
+        assignInterceptor(target, key, value) {
+            var p = self.scope.delegate(target);
+            p[key] = value;
+        }
+    });
     this.$display = 'inherit';
     this.$$data = this.$initData(data);
     injector.injectServices(this, this.$$data);

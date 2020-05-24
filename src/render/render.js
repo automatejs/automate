@@ -3,6 +3,7 @@ import * as helper from '../helper';
 import { parseTpl } from '../tpl';
 import { Local } from '../core';
 import { Binding } from './binding';
+import { Evaluator } from '../exp';
 
 // Window Events
 // case 'on-load':
@@ -37,10 +38,16 @@ export class Render {
         this.locals = locals;
         this.vnodes = [];
         this.directives = [];
+        this.evaluator = new Evaluator(scope, {
+            assignInterceptor(target, key, value) {
+                var p = scope.delegate(target);
+                p[key] = value;
+            }
+        }, locals);
     }
 
     createBinding(text) {
-        return new Binding(this.scope, text, this.locals);
+        return new Binding(this.scope, text, this.locals, this.evaluator);
     }
 
     render(tpl) {
