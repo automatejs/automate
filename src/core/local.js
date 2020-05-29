@@ -1,7 +1,6 @@
 export class Local {
-    constructor(e, elm, arg) {
+    constructor(e, elm) {
         this.$event = e;
         this.$element = elm;
-        this.$argument = arg;
     }
 }

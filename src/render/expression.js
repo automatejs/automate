@@ -5,13 +5,13 @@ export class Expression {
     }
 
     // get value
-    compute(evaluator, locals) {
-        return evaluator.evaluate(this.text, locals);
+    compute(scope, locals) {
+        return scope.$eval(this.text, locals);
     }
 
     // set value
-    assign(evaluator, value, locals) {
-        evaluator.assign(this.text, value, locals);
+    assign(scope, value, locals) {
+        scope.$assign(this.text, value, locals);
     }
 
     watch(scope, handler, locals) {

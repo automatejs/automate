@@ -3,14 +3,15 @@ import { directive } from '../decorator';
 
 @directive({
     namespace: 'automate',
-    key: 'm-hide'
+    key: 'm-if'
 })
-class HideDirective extends Directive {
+class IfDirective extends Directive {
     constructor() {
         super();
+        this.$placeholder = document.createComment('n-if');
     }
 
     onChange(value) {
-        this.$hideElement(value);
+        this.$removeElement(!value);
     }
 }

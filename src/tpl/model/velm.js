@@ -1,13 +1,15 @@
-import { VNode } from './vnode';
+import { VNode, nodeType } from './vnode';
 import { VAttr } from './vattr';
 import { parseTpl } from '../tpl-api';
+import { TplBuilder } from '../tpl-builder';
 
 export class VElm extends VNode {
     constructor(name) {
-        super(name);
+        super(nodeType.element, name);
+        this.elm = null;
         this.vattrs = [];
         this.selfClosed = false;
-        this.elm = null;
+        this.builder = new TplBuilder();
     }
 
     pushAttr(attr) {
@@ -21,7 +23,7 @@ export class VElm extends VNode {
 
     getAttr(key) {
         var matches = this.vattrs.filter(function (attr) {
-            return attr.belongTo(key);
+            return attr.nodeName === key;
         });
 
         if (!matches.length) {
@@ -84,6 +86,16 @@ export class VElm extends VNode {
         return attr;
     }
 
+    getOuterTpl() {
+        return this.builder.build(this);
+    }
+
+    getInnerTpl() {
+        return this.childNodes.map(child => {
+            return this.builder.build(child);
+        }).join('');
+    }
+
     setOuterTpl(tpl) {
         var self = this;
         parseTpl(tpl).forEach(function (vnode) {
@@ -100,6 +112,18 @@ export class VElm extends VNode {
             vnode.parentNode = null;
             self.appendChild(vnode);
         });
+    }
+
+    onCloneNode() {
+        var node = new VElm(this.nodeName, this.nodeValue);
+
+        node.vattrs = this.vattrs.map(function (vattr) {
+            var copy = vattr.cloneNode();
+            copy.velm = node;
+            return copy;
+        });
+
+        return node;
     }
 
     onDestroy() {

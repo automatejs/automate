@@ -1,9 +1,7 @@
 import { Directive } from '../view';
 import { directive } from '../decorator';
-import { TplBuilder } from '../tpl';
-import { Render } from '../render';
 import * as utils from '../utils';
-import * as helper from '../helper';
+import * as dom from '../dom';
 
 @directive({
     namespace: 'automate',
@@ -28,9 +26,8 @@ class RepeatDirective extends Directive {
 
         this.itemExp = result[1];
         this.itemsExp = result[2];
-        var builder = new TplBuilder();
         velm.removeAttr(vattr);
-        this.itemTemplate = builder.build(velm);
+        this.itemTemplate = velm.getOuterTpl();
 
         // identify this directive would take over link function for related virtual element node, onLink function will be called
         return true;
@@ -47,7 +44,7 @@ class RepeatDirective extends Directive {
 
         scope.$watchCollection(this.itemsExp, () => {
             var fragment = this.render(scope);
-            helper.removeNodeBetween(header, footer);
+            dom.removeElementsBetween(header, footer);
             footer.parentNode.insertBefore(fragment, footer);
         });
 
@@ -61,12 +58,12 @@ class RepeatDirective extends Directive {
 
         utils.forEach(items, function(item, key) {
             var locals = {};
+
             locals['$key'] = key;
             locals['$index'] = key;
             locals[self.itemExp] = item;
 
-            var render = new Render(scope, locals);
-            var itemContent = render.render(self.itemTemplate);
+            var itemContent = self.$renderer.render(self.itemTemplate, locals);
 
             fragment.appendChild(itemContent);
         });

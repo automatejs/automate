@@ -4,20 +4,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>m-model</title>
+    <title>m-if</title>
 </head>
 
 <body>
 <div id="app">
-    <div>name:<span *m-bind="state.name"></span></div>
-    <input type="text" *m-model="state.name" />
-    <input type="text" *m-model="state.name" />
+    <div *m-if="state.visible">inner content</div>
+    <button @click="change()">change</button>
 </div>
 <script src="../dist//automate.js"></script>
 <script>
     automate.render('#app', {
         construct: function () {
-            this.state.name = 'model directive';
+            this.state.visible = true;
+        },
+        change: function () {
+            this.state.visible = !this.state.visible;
         }
     });
 </script>

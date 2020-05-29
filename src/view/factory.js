@@ -108,22 +108,30 @@ export class Factory {
     }
 
     makeComponent(name, config, metadata) {
-        config.extends = componentClass;
+        config = utils.merge({
+            extends: componentClass
+        }, config);
         return this.make(roles.component, name, config, metadata);
     }
 
     makeDirective(name, config, metadata) {
-        config.extends = directiveClass;
+        config = utils.merge({
+            extends: directiveClass
+        }, config);
         return this.make(roles.directive, name, config, metadata);
     }
 
     makeFilter(name, config, metadata) {
-        config.extends = filterClass;
+        config = utils.merge({
+            extends: filterClass
+        }, config);
         return this.make(roles.filter, name, config, metadata);
     }
 
     makeService(name, config, metadata) {
-        config.extends = serviceClass;
+        config = utils.merge({
+            extends: serviceClass
+        }, config);
         return this.make(roles.service, name, config, metadata);
     }
 }

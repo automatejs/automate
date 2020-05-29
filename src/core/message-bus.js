@@ -20,7 +20,7 @@ export class MessageBus {
         this.get(e).off(fn);
     }
 
-    fire(e, args, scope) {
-        return this.get(e).fire(args, scope);
+    fire(e, data, scope) {
+        return this.get(e).fire(data, scope);
     }
 }

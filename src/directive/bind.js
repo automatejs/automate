@@ -11,6 +11,6 @@ class BindDirective extends Directive {
     }
 
     onChange(value) {
-        this.$elm.innerText = value;
+        this.$element.innerText = value;
     }
 }

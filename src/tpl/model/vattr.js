@@ -1,8 +1,8 @@
-import { VNode } from './vnode';
+import { VNode, nodeType } from './vnode';
 
 export class VAttr extends VNode {
     constructor(name, value) {
-        super(name, value);
+        super(nodeType.attribute, name, value);
         this.velm = null;
         this.quote = '"';
     }
@@ -11,7 +11,11 @@ export class VAttr extends VNode {
         this.nodeValue = value;
     }
 
-    onDdestroy() {
+    onCloneNode() {
+        return new VAttr(this.nodeName, this.nodeValue);
+    }
+
+    onDestroy() {
 
     }
 }

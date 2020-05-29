@@ -62,15 +62,8 @@ export class Injector {
         this.register(roles.service, key, constructor, metadata);
     }
 
-    has(roleId, key, ignoreCase, alias) {
+    has(roleId, key, ignoreCase, namespace) {
         var constructors, container = this.getClassContainer(roleId);
-        var segments = this.convertAlias(key, alias).split('.');
-        var namespace = '';
-
-        if (segments.length > 1) {
-            key = segments.pop();
-            namespace = segments.join('.');
-        }
 
         if (ignoreCase) {
             constructors = utils.getProperty(container, key, true);
@@ -97,31 +90,24 @@ export class Injector {
         return true;
     }
 
-    hasComponent(key, alias) {
-        return this.has(roles.component, key, true, alias);
+    hasComponent(key, namespace) {
+        return this.has(roles.component, key, true, namespace);
     }
 
-    hasDirective(key, alias) {
-        return this.has(roles.directive, key, true, alias);
+    hasDirective(key, namespace) {
+        return this.has(roles.directive, key, true, namespace);
     }
 
-    hasFilter(key, alias) {
-        return this.has(roles.filter, key, true, alias);
+    hasFilter(key, namespace) {
+        return this.has(roles.filter, key, true, namespace);
     }
 
-    hasService(key, alias) {
-        return this.has(roles.service, key, true, alias);
+    hasService(key, namespace) {
+        return this.has(roles.service, key, true, namespace);
     }
 
-    get(roleId, key, ignoreCase, alias) {
+    get(roleId, key, ignoreCase, namespace) {
         var constructors, container = this.getClassContainer(roleId);
-        var segments = this.convertAlias(key, alias).split('.');
-        var namespace = '';
-
-        if (segments.length > 1) {
-            key = segments.pop();
-            namespace = segments.join('.');
-        }
 
         if (ignoreCase) {
             constructors = utils.getProperty(container, key, true);
@@ -131,7 +117,7 @@ export class Injector {
         }
 
         if (constructors == null) {
-            throw new Error(roleId + ' ' + key + ' is not defined');
+            return null;
         }
 
         if (namespace && constructors.length > 0) {
@@ -141,7 +127,7 @@ export class Injector {
             });
 
             if (constructors.length === 0) {
-                throw new Error(key + ' is not exist under namespace ' + namespace);
+                return null;
             }
         }
 
@@ -155,27 +141,27 @@ export class Injector {
         return constructors[0];
     }
 
-    getComponent(key, alias) {
-        return this.get(roles.component, key, alias);
+    getComponent(key, namespace) {
+        return this.get(roles.component, key, namespace);
     }
 
-    getDirective(key, alias) {
-        return this.get(roles.directive, key, alias);
+    getDirective(key, namespace) {
+        return this.get(roles.directive, key, namespace);
     }
 
-    getFilter(key, alias) {
-        return this.get(roles.filter, key, alias);
+    getFilter(key, namespace) {
+        return this.get(roles.filter, key, namespace);
     }
 
-    getService(key, alias) {
-        return this.get(roles.service, key, alias);
+    getService(key, namespace) {
+        return this.get(roles.service, key, namespace);
     }
 
-    create(roleId, keyOrConstructor, alias) {
+    create(roleId, keyOrConstructor, namespace) {
         var constructor;
 
         if (utils.isString(keyOrConstructor)) {
-            constructor = this.get(roleId, keyOrConstructor, alias);
+            constructor = this.get(roleId, keyOrConstructor, namespace);
 
             if (constructor == null) {
                 throw new Error('miss constructor for key ' + keyOrConstructor);
@@ -189,19 +175,19 @@ export class Injector {
         return new constructor();
     }
 
-    createComponent(keyOrConstructor, alias) {
-       return this.create(roles.component, keyOrConstructor, alias);
+    createComponent(keyOrConstructor, namespace) {
+       return this.create(roles.component, keyOrConstructor, namespace);
     }
 
-    createDirective(keyOrConstructor, alias) {
-        return this.create(roles.directive, keyOrConstructor, alias);
+    createDirective(keyOrConstructor, namespace) {
+        return this.create(roles.directive, keyOrConstructor, namespace);
     }
 
-    createFilter(keyOrConstructor, alias) {
+    createFilter(keyOrConstructor, namespace) {
         var instance, container = this.getInstanceContainer(roles.filter);
 
         if (utils.isString(keyOrConstructor)) {
-            keyOrConstructor = this.getFilter(keyOrConstructor, alias);
+            keyOrConstructor = this.getFilter(keyOrConstructor, namespace);
         }
 
         var result = container.filter(function (item) {
@@ -218,11 +204,11 @@ export class Injector {
         return instance;
     }
 
-    createService(keyOrConstructor, alias) {
+    createService(keyOrConstructor, namespace) {
         var instance, container = this.getInstanceContainer(roles.service);
 
         if (utils.isString(keyOrConstructor)) {
-            keyOrConstructor = this.getService(keyOrConstructor, alias);
+            keyOrConstructor = this.getService(keyOrConstructor, namespace);
         }
 
         if (!keyOrConstructor.prototype.$$metadata.nonShared) {
@@ -243,35 +229,34 @@ export class Injector {
         return instance;
     }
 
-    convertAlias(key, alias) {
-        if (!utils.isObject(alias)) {
-            return key;
-        }
-
-        var segments = key.split('.');
+    parseFullName(name, alias) {
+        var result = {ns: '', key: ''},
+            segments = name.split('.');
 
         if (segments.length === 1) {
-            return key;
+            result.key = name;
+        } else {
+            result.key = segments.pop();
+            result.ns = segments.join('.');
+
+            if (alias) {
+                utils.some(alias, function (shortName, fullName) {
+                    if (shortName === result.ns) {
+                        result.ns = fullName;
+                        return true;
+                    }
+                });
+            }
         }
 
-        var className = segments.pop(),
-            spaceName = segments.join('.');
-
-        utils.some(alias, function (shortName, fullName) {
-            if (shortName === spaceName) {
-                key = fullName + '.' + className;
-                return true;
-            }
-        });
-
-        return key;
+        return result;
     }
 
     injectServices(instance, metadata) {
         var self = this;
 
         if (metadata && utils.isObject(metadata.inject)) {
-            utils.forEach(metadata.inject, function (value, key) {
+            utils.forEach(metadata.inject, function (service, key) {
                 Object.defineProperty(instance, key, {
                     enumerable: false,
                     configurable: false,
@@ -279,7 +264,12 @@ export class Injector {
                         var privateKey = '$$' + key;
 
                         if (instance[privateKey] == null) {
-                            instance[privateKey] = self.createService(value, metadata.alias);
+                            if (utils.isString(service)) {
+                                var identifier = self.parseFullName(service, metadata.alias);
+                                instance[privateKey] = self.createService(identifier.key, identifier.ns);
+                            } else {
+                                instance[privateKey] = self.createService(service);
+                            }
                         }
 
                         return instance[privateKey];

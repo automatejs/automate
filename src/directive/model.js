@@ -1,6 +1,5 @@
 import { Directive } from '../view';
 import { directive } from '../decorator';
-import { isMessage } from '../core';
 
 @directive({
     namespace: 'automate',
@@ -37,22 +36,17 @@ class ModelDirective extends Directive {
     }
 
     afterLink() {
-        var name = this.$elm.name;
+        var name = this.$element.name;
 
         if (name) {
-            this.$scope[name] = this.status;
+            this.$scope.state[name] = this.status;
         }
-        
+
         if (this.$component != null) {
-            if (isMessage(this.$component.valueChange)) {
-                this.$component.valueChange.on((e, args) => self.commitViewValue(args.newvalue));
-            }
-            else{
-                throw new Error('Component ' + this.$component.$$meta.key + 'must define [change] event');
-            }
+            this.$component.$bind('change', e => this.commitViewValue(e.data.newvalue));
         }
         else {
-            this.$elm.addEventListener('input', e => this.commitViewValue(e.target.value));
+            this.$element.addEventListener('input', e => this.commitViewValue(e.target.value));
         }
     }
 
@@ -84,9 +78,9 @@ class ModelDirective extends Directive {
         this.viewValue = newValue;
 
         if (this.$component != null) {
-            this.$component.$setAttribute('value', newValue);
+            this.$component.$setProperty('value', newValue);
         } else {
-            this.$elm.value = newValue;
+            this.$element.value = newValue;
         }
 
         this.updateElmCssClass();
@@ -125,7 +119,7 @@ class ModelDirective extends Directive {
     }
 
     updateElmCssClass() {
-        var ele = this.$elm,
+        var ele = this.$element,
             css = this.options.css;
 
         if (this.status.dirty) {

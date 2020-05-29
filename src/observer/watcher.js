@@ -45,12 +45,12 @@ class ObjectListener {
 
 export class Watcher {
     constructor() {
-        this.onPropChanging = args => {
-            this.handlePropChanging(args);
+        this.onPropChanging = e => {
+            this.handlePropChanging(e.data);
         };
 
-        this.onPropChanged = args => {
-            this.handlePropChanged(args);
+        this.onPropChanged = e => {
+            this.handlePropChanged(e.data);
         };
 
         this.listeners = [];

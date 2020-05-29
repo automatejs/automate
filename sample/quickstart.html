@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>quick start</title>
+</head>
+
+<body>
+    <div id="app">
+        <input *m-model="state.todo" placeholder="something to do" /> <button @click="send()">send</button>
+        <ul><li *m-repeat="item in state.items" *m-bind="item"></li></ul>
+    </div>
+
+    <script src="../dist//automate.js"></script>
+
+    <script>
+        automate.render('#app', {
+            construct: function () {
+                this.state.todo = '';
+                this.state.items = [];
+            },
+            send: function () {
+                if(this.state.todo) {
+                    this.state.items.push(this.state.todo);
+                    this.state.todo = '';
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

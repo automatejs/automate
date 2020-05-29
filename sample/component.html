@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>create a component</title>
+</head>
+
+<body>
+    <template id="test-cmp">
+        <div>it is a web component</div>
+        <div>name: {{ props.name }}</div>
+        <button @click="rename()">rename</button>
+    </template>
+
+    <div id="app">
+        <test-cmp :name="state.name" @renamed="onNameChange($event)"></test-cmp>
+    </div>
+
+    <script src="../dist/automate.js"></script>
+
+    <script>
+        automate.namespace('sample').component('test-cmp', {
+            construct: function () {
+                this.props.name = '';
+                this.events.renamed = new automate.Message();
+            },
+            rename: function () {
+                this.props.name = 'new test component';
+                this.events.renamed.fire({
+                    newName: this.props.name
+                });
+            }
+        }, {
+            templateId: 'test-cmp'
+        });
+
+        automate.render('#app', {
+            construct: function () {
+                this.state.name = 'test component';
+            },
+            onNameChange: function (e) {
+                alert('new name: ' + e.data.newName);
+            }
+        });
+    </script>
+</body>
+
+</html>

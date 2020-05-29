@@ -11,7 +11,7 @@ class StyleEvenDirective extends StyleDirective {
     }
 
     skipCurrentElm() {
-        var index = this.$evaluator.evaluate('$index');
+        var index = this.$binding.evaluate('$index');
         return index & 1 === 1;
     }
 }

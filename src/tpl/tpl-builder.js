@@ -1,26 +1,20 @@
+import { isVText, isVComment } from './tpl-api'
+
 export class TplBuilder {
     constructor() {
 
     }
 
     build(vnode) {
-        if (this.isText(vnode)) {
+        if (isVText(vnode)) {
             return this.buildText(vnode);
         }
 
-        if(this.isComment(vnode)) {
+        if(isVComment(vnode)) {
             return this.buildComment(vnode);
         }
 
         return this.buildElement(vnode);
-    }
-
-    isText(vnode) {
-        return vnode.nodeName === '#text';
-    }
-
-    isComment(vnode) {
-        return vnode.nodeName === '#comment';
     }
 
     buildElement(velm) {
@@ -53,7 +47,7 @@ export class TplBuilder {
     }
 
     buildComment(vcmnt) {
-        return this.nodeValue;
+        return vcmnt.nodeValue;
     }
 }
 

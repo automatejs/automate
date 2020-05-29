@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>create a binding</title>
+</head>
+
+<body>
+    <div id="app">
+        <!--bind text-->
+        <div>{{ state.text }}</div>
+        <!--bind part of text-->
+        <div>start {{ state.text }} end</div>
+
+        <!--bind attribute value-->
+        <input type="text" :value="state.text" />
+        <!--alternative approach-->
+        <input type="text" value="{{ state.text }}" />
+
+        <!--bind sub attribute value, such as bind style-->
+        <div :style.width="state.css.width" :style.height="state.css.height" :style.background-color="state.css.background"></div>
+
+        <!--bind event-->
+        <button @click="onClick()">click</button>
+
+        <!--bind nullable object variable-->
+        <div>{{ state.obj?.value }}</div>
+        <button @click="fillValue()">fill value</button>
+
+        <!--two-way binding-->
+        <input type="text" *m-model="state.value" />
+        <input type="text" *m-model="state.value" />
+    </div>
+
+    <script src="../dist//automate.js"></script>
+
+    <script>
+        automate.render('#app', {
+            construct: function () {
+                this.state.value = 'two-way binding';
+                this.state.text = 'text content';
+                this.state.css = {
+                    width: '100px',
+                    height: '40px',
+                    background: 'red'
+                };
+            },
+            onClick: function () {
+                alert('clicked');
+            },
+            fillValue: function () {
+                this.state.obj = {
+                    value: 'nullable object value'
+                };
+            }
+        });
+    </script>
+</body>
+
+</html>

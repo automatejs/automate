@@ -160,8 +160,20 @@ function updateProxy(target, key) {
     var value = target[key];
 
     if (utils.isObject(value) && !isProxy(value)) {
-        getTarget(target)[key] = new Proxy(value, handler);
+        target = getTarget(target);
+        target[key] = new Proxy(value, handler);
     }
+}
+
+function makeProxy(value) {
+    if (utils.isObject(value) && !isProxy(value)) {
+        utils.forEach(value, function (item, key) {
+            value[key] = makeProxy(item);
+        });
+        return new Proxy(value, handler);
+    }
+
+    return value;
 }
 
 function getProxy(target, key) {
@@ -195,7 +207,7 @@ function setProxy(target, key, value) {
         });
 
         if (validation.apply) {
-            target[key] = value;
+            target[key] = makeProxy(value);
             events.propChanged.fire({
                 target: target,
                 key: key,
@@ -215,5 +227,6 @@ function setProxy(target, key, value) {
 
 export {
     isProxy,
-    getTarget
+    getTarget,
+    handler
 }

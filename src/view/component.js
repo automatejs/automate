@@ -1,43 +1,43 @@
 import * as utils from '../utils';
 import { isMessage } from '../core';
-import { Observer } from '../observer';
-import { Render } from '../render';
+import { Observer, handler } from '../observer';
+import { Renderer } from '../render';
 import { injector } from './injector';
 import { Evaluator } from '../exp';
 
 export function componentConstructor(data) {
-    this.props = {};
-    this.events = {};
     this.$$velm = null;
-    this.$$fragment = null;
+    this.$$view = null;
     this.$$parent = null;
     this.$$children = [];
     this.$$directives = [];
-    this.$$injector = injector;
-    this.$$render = new Render(this);
-    this.$$observer = new Observer(this);
-    this.$$evaluator = new Evaluator(this,  {
-        assignInterceptor(target, key, value) {
-            var p = self.scope.delegate(target);
-            p[key] = value;
-        }
-    });
-    this.$display = 'inherit';
     this.$$data = this.$initData(data);
+    this.$$injector = injector;
+    this.$$renderer = new Renderer(this);
+    this.$$observer = new Observer(this);
+    this.$$evaluator = new Evaluator(this);
+    this.slots = {};
+    this.events = {};
+    this.props = this.$delegate({});
+    this.state = this.$delegate({});
     injector.injectServices(this, this.$$data);
 }
 
 export class Component {
-    delegate(target) {
-        if (target == null) {
-            target = this;
-        }
+    $delegate(target) {
+        return new Proxy(target, handler);
+    }
 
-        if (utils.isObject(target)) {
-            return target.toProxy();
-        }
+    $setSlot(slots) {
+        this.slots = slots || {};
+    }
 
-        throw new Error('target is not a object');
+    $setState(state) {
+        this.state = this.$delegate(state);
+    }
+
+    $setProps(props) {
+        this.props = this.$delegate(props);
     }
 
     constructor() {
@@ -52,38 +52,44 @@ export class Component {
         utils.extend(this.$$data, data);
     }
 
-    $hasComponent(key) {
-        return this.$$injector.hasComponent(key, this.$$data.alias);
+    $getNsAlias() {
+        return this.$$data.alias;
     }
 
-    $newComponent(key) {
-        var child = this.$$injector.createComponent(key, this.$$data.alias);
+    $parseFullName(fullName) {
+        return this.$$injector.parseFullName(fullName, this.$getNsAlias());
+    }
+
+    $getComponent(key, namespace) {
+        return this.$$injector.getComponent(key, namespace);
+    }
+
+    $newComponent(cls) {
+        var child = this.$$injector.createComponent(cls);
         child.$$parent = this;
         this.$$children.push(child);
         return child;
     }
 
-    $hasDirective(key) {
-        return this.$$injector.hasDirective(key, this.$$data.alias);
+    $getDirective(key, namespace) {
+        return this.$$injector.getDirective(key, namespace);
     }
 
-    $newDirective(key) {
-        var directive = this.$$injector.createDirective(key, this.$$data.alias);
+    $newDirective(cls) {
+        var directive = this.$$injector.createDirective(cls);
         directive.$$scope = this;
         this.$$directives.push(directive);
         return directive;
     }
 
-    $hasFilter(key) {
-        return this.$$injector.hasFilter(key, this.$$data.alias);
-    }
-
-    $getFilter(key) {
-        return this.$$injector.createFilter(key, this.$$data.alias);
+    $getFilter(fullName) {
+        var identifier = this.$parseFullName(fullName);
+        return this.$$injector.createFilter(identifier.key, identifier.ns);
     }
 
     $hasProperty(key) {
-        return utils.hasProperty(this.props, key, true);
+        // return utils.hasProperty(this.props, key, true);
+        return this.$getProperty(key) !== undefined;
     }
 
     $getProperty(key) {
@@ -94,7 +100,7 @@ export class Component {
         var oldValue = utils.getProperty(this.props, key, true);
 
         if (oldValue !== value) {
-            utils.setProperty(this.delegate(this.props), key, value, true);
+            utils.setProperty(this.props, key, value, true);
         }
     }
 
@@ -107,6 +113,8 @@ export class Component {
 
         if (isMessage(message)) {
             message.on(handler);
+        } else {
+            throw new Error(utils.format('"{0}" is not a valid event', key));
         }
     }
 
@@ -126,8 +134,12 @@ export class Component {
         return this.$$observer.watchCollection(exp, handler, locals);
     }
 
-    $eval(exp) {
-        return this.$$evaluator.evaluate(exp);
+    $eval(exp, locals) {
+        return this.$$evaluator.evaluate(exp, locals);
+    }
+
+    $assign(exp, value, locals) {
+        return this.$$evaluator.assign(exp, value, locals);
     }
 
     $getTemplate() {
@@ -150,8 +162,8 @@ export class Component {
 
     $render() {
         var template = this.$getTemplate();
-        this.$$fragment = this.$$render.render(template);
-        return this.$$fragment;
+        this.$$view = this.$$renderer.render(template);
+        return this.$$view;
     }
 
     $mount(selectorOrElement) {
@@ -164,7 +176,7 @@ export class Component {
             element = selectorOrElement;
         }
 
-        element.appendChild(this.$$fragment);
+        element.appendChild(this.$$view);
     }
 
     $unmount() {

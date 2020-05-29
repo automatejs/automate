@@ -1,15 +1,31 @@
+export var nodeType = {
+    element: 1,
+    attribute: 2,
+    text: 3,
+    cdataSection: 4,
+    entityReference: 5,
+    entity: 6,
+    processingInstruction: 7,
+    comment: 8,
+    document: 9,
+    documentType: 10,
+    documentFragment: 11,
+    notation: 12
+}
+
 // virtual node
 export class VNode {
-    constructor(name, value) {
+    constructor(type, name, value) {
+        this.nodeType = type;
         this.nodeName = name;
         this.nodeValue = value;
         this.childNodes = [];
+        this.firstChild = null;
+        this.lastChild = null;
         this.parentNode = null;
         this.previousSibling = null;
         this.nextSibling = null;
-        this.firstChild = null;
-        this.lastChild = null;
-        this.data = {};
+        this.nodeData = {};
     }
 
     pushChild(child) {
@@ -186,8 +202,17 @@ export class VNode {
         return newChild;
     }
 
-    cloneNode() {
-        throw new Error('not implemented');
+    cloneNode(deep) {
+        var node = this.onCloneNode(deep);
+
+        if(deep) {
+            node.childNodes = this.childNodes.map(function (child) {
+                return child.cloneNode(deep);
+            });
+            node.buildSibling();
+        }
+
+        return node;
     }
 
     destroy() {

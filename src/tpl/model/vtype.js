@@ -1,7 +1,7 @@
-import { VNode } from './vnode';
+import { VNode, nodeType } from './vnode';
 
 export class VType extends VNode {
     constructor() {
-        super();
+        super(nodeType.documentType);
     }
 }

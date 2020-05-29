@@ -5,15 +5,15 @@ import { ExpBuilder } from './exp-builder';
 
 export class Evaluator {
     constructor(scope, options) {
-        this.locals = null;
-        this.program = null;
         this.scope = scope;
         this.options = utils.merge({
             allowNull: false,
             assignInterceptor: null
         }, options);
-        this.builder = new ExpBuilder();
+        this.program = null;
+        this.locals = null;
         this.buffer = {};
+        this.builder = new ExpBuilder();
     }
 
     parse(exp) {
@@ -282,13 +282,13 @@ export class Evaluator {
         });
 
         if (call.filter) {
-            if (this.scope.$hasFilter(context.prop)) {
-                var filter = this.scope.$getFilter(context.prop);
-                return filter.execute.apply(filter, argValues);
-            }
-            else {
+            var filter = this.scope.$getFilter(context.prop);
+
+            if(filter == null) {
                 throw new Error('Filter "' + context.prop + '" is not defined');
             }
+
+            return filter.execute.apply(filter, argValues);
         }
         else {
             var fn = context.obj[context.prop];

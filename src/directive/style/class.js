@@ -1,6 +1,6 @@
 import { Directive } from '../../view';
 import { directive } from '../../decorator';
-import * as utils from '../../utils';
+import * as dom from '../../dom';
 
 @directive({
     namespace: 'automate',
@@ -9,35 +9,20 @@ import * as utils from '../../utils';
 export class ClassDirective extends Directive {
     constructor() {
         super();
-        this.valueText = null;
     }
 
-    onCompile(velm, vattr) {
-        this.valueText = vattr.nodeValue;
-        return true;
-    }
-
-    onLink(scope) {
+    onChange(newClass, oldClass) {
         if (this.skipCurrentElm()) {
             return;
         }
 
-        scope.$watchCollection(this.valueText, (args) => {
-            this.setElmClass(args.newValue);
-        });
-
-        this.setElmClass(scope.$eval(this.valueText));
-    }
-
-    setElmClass(value) {
-        if (utils.isArray(value)) {
-            value = value.join(' '); 
-        }
-        else if (!utils.isString(value)) {
-            throw new Error('directive "m-class" should bind string or array');
+        if (oldClass) {
+            dom.removeClass(this.$element, oldClass);
         }
 
-        this.$elm.class = value;
+        if (newClass) {
+            dom.addClass(this.$element, newClass);
+        }
     }
 
     skipCurrentElm() {

@@ -9,19 +9,17 @@
 
 <body>
     <div id="app">
-        <div *m-bind="value"></div>
+        <div *m-bind="state.value"></div>
         <button @click="change()">change</button>
     </div>
     <script src="../dist//automate.js"></script>
     <script>
-        automate.bootstrap('#app', {
+        automate.render('#app', {
             construct: function () {
-                this.value = 1;
+                this.state.value = 1;
             },
             change: function () {
-                var self = this.delegate();
-                
-                self.value++;
+                this.state.value++;
             }
         });
     </script>

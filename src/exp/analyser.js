@@ -1,5 +1,5 @@
 import * as utils from '../utils';
-import { AST, NullExpressionNode } from './model';
+import { AST } from './model';
 import { parseExp } from './exp-api';
 import { ExpBuilder } from './exp-builder';
 

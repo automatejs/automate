@@ -3,14 +3,14 @@ import { directive } from '../decorator';
 
 @directive({
     namespace: 'automate',
-    key: 'm-hide'
+    key: 'm-bind-html'
 })
-class HideDirective extends Directive {
+class BindHtmlDirective extends Directive {
     constructor() {
         super();
     }
 
     onChange(value) {
-        this.$hideElement(value);
+        this.$element.innerHTML = value;
     }
 }

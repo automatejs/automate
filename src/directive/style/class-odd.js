@@ -3,7 +3,7 @@ import { directive } from '../../decorator';
 
 @directive({
     namespace: 'automate',
-    selector: 'm-class-odd'
+    key: 'm-class-odd'
 })
 class ClassOddDirective extends ClassDirective {
     constructor() {
@@ -11,7 +11,7 @@ class ClassOddDirective extends ClassDirective {
     }
 
     skipCurrentElm() {
-        var index = this.$evaluator.evaluate('$index');
-        return ndex & 1 === 0;
+        var index = this.$binding.evaluate('$index');
+        return index & 1 === 0;
     }
 }

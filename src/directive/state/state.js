@@ -8,13 +8,12 @@ export class StateDirective extends Directive {
 
     onChange(value) {
         if (value) {
-            if (!this.$elm.hasAttribute(this.key)) {
-                this.$elm.setAttribute(this.key, '');
+            if (!this.$element.hasAttribute(this.key)) {
+                this.$element.setAttribute(this.key, '');
             }
-        }
-        else {
-            if (this.$elm.hasAttribute(this.key)) {
-                this.$elm.removeAttribute(this.key);
+        } else {
+            if (this.$element.hasAttribute(this.key)) {
+                this.$element.removeAttribute(this.key);
             }
         }
     }

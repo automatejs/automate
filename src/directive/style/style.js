@@ -4,50 +4,34 @@ import * as utils from '../../utils';
 
 @directive({
     namespace: 'automate',
-    selector: 'm-style'
+    key: 'm-style'
 })
 export class StyleDirective extends Directive {
     constructor() {
         super();
-        this.valueText = null;
     }
 
-    onCompile(velm, vattr) {
-        this.valueText = vattr.nodeValue;
-        return true;
-    }
-
-    onLink(scope) {
+    onChange(newStyle, oldStyle) {
         if (this.skipCurrentElm()) {
             return;
         }
 
-        scope.$watchCollection(this.valueText, (args) => {
-            this.setElmStyle(args.newValue);
-        });
+        var self = this;
 
-        this.setElmStyle(scope.$eval(this.valueText));
+        if (oldStyle) {
+            utils.forEach(oldStyle, function (value, key) {
+                self.$element.style[key] = '';
+            });
+        }
+
+        if (utils.isObject(newStyle)) {
+            utils.forEach(newStyle, function (value, key) {
+                self.$element.style[key] = value;
+            });
+        }
     }
 
     skipCurrentElm() {
         return false;
-    }
-
-    setElmStyle(value) {
-        // clean up style
-        this.$elm.style = '';
-
-        // set new style
-        if (utils.isString(value)) {
-            this.$elm.style = value;
-        }
-        else if (utils.isObject(value)) {
-            utils.forEach(value, function (value, key) {
-                element.style[key] = value;
-            });
-        }
-        else {
-            throw new Error('Parameter of n-style should be string or object');
-        }
     }
 }

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>style</title>
+</head>
+<body>
+<div id="app">
+    <div *m-style="state.css">content</div>
+    <button @click="change()">change</button>
+</div>
+<script src="../dist//automate.js"></script>
+<script>
+    automate.render('#app', {
+        construct: function () {
+            this.state.css = {
+                color: 'red',
+                'background-color': 'blue'
+            };
+        },
+        change: function () {
+            this.state.css = {
+                color: 'white',
+                'background-color': 'blue'
+            };
+        }
+    });
+</script>
+</body>
+</html>

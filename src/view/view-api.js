@@ -1,7 +1,6 @@
-
 import { factory } from './factory';
 import { injector } from './injector';
-import * as helper from '../helper';
+import * as dom from '../dom';
 import { Component } from './component';
 import { Directive } from './directive';
 import { Filter } from './filter';
@@ -68,14 +67,14 @@ function isService(instance) {
     return instance instanceof Service;
 }
 
-function bootstrap(selector, config) {
+function render(selector, config) {
     var element = document.querySelector(selector);
     var Root = factory.makeComponent('root', config, {
         template: element.innerHTML
     });
     var root = new Root();
     
-    helper.clearChildNodes(element);
+    dom.clearChildrenOfElement(element);
     root.$render();
     root.$mount(element);
 }
@@ -90,6 +89,6 @@ export {
     isFilter,
     isService,
     namespace,
-    bootstrap,
+    render,
     injector
 };
