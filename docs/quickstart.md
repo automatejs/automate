@@ -6,34 +6,45 @@ automate provides progressive development style, developer can build component i
 
 # compatibility
 
-automate is designed for modern browser, it use ES6 proxy object to detect data change.
+automate is designed for modern browser, it uses ES6 ___Proxy___ object to detect data change.
 
-# document
-
-[automate.js](https://github.com/automatejs/automate)
-
-# get start
-
-1. reference automate js
+# sample
 
 ```
-<script src="lib/automate.js"></script>
-```
+<!--index.html-->
 
-2. create html template
+<!DOCTYPE html>
+<html lang="en">
 
-```
-<div id="app">
-    <div>{{ state.value }}</div>
-</div>
-```
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>quick start</title>
+</head>
 
-3. render the template 
+<body>
+    <div id="app">
+        <input *m-model="state.todo" placeholder="something to do" /> <button @click="send()">send</button>
+        <ul><li *m-repeat="item in state.items" *m-bind="item"></li></ul>
+    </div>
 
-```
-automate.render('#app', {
-    construct: function () {
-        this.state.value = 'quick start';
-    }
-});
+    <script src="../dist//automate.js"></script>
+
+    <script>
+        automate.render('#app', {
+            construct: function () {
+                this.state.todo = '';
+                this.state.items = [];
+            },
+            send: function () {
+                if(this.state.todo) {
+                    this.state.items.push(this.state.todo);
+                    this.state.todo = '';
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>
 ```

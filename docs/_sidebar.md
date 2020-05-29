@@ -1,5 +1,8 @@
 <!-- docs/_sidebar.md -->
 
-* [Home](/)
-* [Getting started](/quickstart)
-* [Guide](/guide)
+* Gettings started
+  * [Quick start](quickstart.md)
+  * [Create a binding](binding.md)
+  * [Create a component](component.md)
+
+* Guid

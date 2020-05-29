@@ -9,4 +9,4 @@
 - progressive development style
 
 [GitHub](https://github.com/automatejs/automate)
-[Get Started](quick-start)
+[Get Started](quickstart.md)
