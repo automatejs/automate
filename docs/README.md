@@ -48,3 +48,7 @@ automate is designed for modern browser, it uses ES6 ___Proxy___ object to detec
 
 </html>
 ```
+
+# documentation
+
+[automate](https://automatejs.github.io/automate)
