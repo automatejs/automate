@@ -6,9 +6,9 @@ automate provides progressive development style, developer can build component i
 
 # compatibility
 
-automate is designed for modern browser, it uses ES6 proxy object to detect data change.
+automate is designed for modern browser, it uses ES6 ___Proxy___ object to detect data change.
 
-# a sample
+# sample
 
 ```
 <!--index.html-->
