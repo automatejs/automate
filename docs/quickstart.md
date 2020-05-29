@@ -24,7 +24,7 @@ automate is designed for modern browser, it use ES6 proxy object to detect data 
 
 ```
 <div id="app">
-    <div>{{ value }}</div>
+    <div>{{ state.value }}</div>
 </div>
 ```
 
@@ -33,7 +33,7 @@ automate is designed for modern browser, it use ES6 proxy object to detect data 
 ```
 automate.render('#app', {
     construct: function () {
-        this.value = 'good try';
+        this.state.value = 'quick start';
     }
 });
 ```
