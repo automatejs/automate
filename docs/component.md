@@ -87,9 +87,37 @@ automate.namespace('sample').component('test-cmp', {
 <test-cmp :name="state.name" @renamed="onNameChange($event)"></test-cmp>
 ```
 
+# define slot
+
+```
+<!-- slot placeholder in the temlate -->
+
+ <template id="test-cmp">
+    <div>it is a web component</div>
+    <div>name: {{ props.name }}</div>
+    <slot name="part1"></slot>
+    <slot name="part2"></slot>
+    <button @click="rename()">rename</button>
+</template>
+
+<!-- define slot content under the web component element -->
+
+<test-cmp :name="state.name" @renamed="onNameChange($event)">
+    <div slot="part1">
+        this is part 1
+    </div>
+
+    <div slot="part2">
+        this is part 2
+    </div>
+</test-cmp>
+```
+
 # sample
 
 ```
+<!-- index.html -->
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -103,11 +131,21 @@ automate.namespace('sample').component('test-cmp', {
     <template id="test-cmp">
         <div>it is a web component</div>
         <div>name: {{ props.name }}</div>
+        <slot name="part1"></slot>
+        <slot name="part2"></slot>
         <button @click="rename()">rename</button>
     </template>
 
     <div id="app">
-        <test-cmp :name="state.name" @renamed="onNameChange($event)"></test-cmp>
+        <test-cmp :name="state.name" @renamed="onNameChange($event)">
+            <div slot="part1">
+                this is part 1
+            </div>
+     
+            <div slot="part2">
+                this is part 2
+            </div>
+        </test-cmp>
     </div>
 
     <script src="../dist/automate.js"></script>

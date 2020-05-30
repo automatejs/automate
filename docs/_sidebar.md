@@ -7,4 +7,8 @@
   * [Create a loop](repeat.md)
   * [Create a component](component.md)
 
-* Guid
+* Commponent
+
+* Directive
+
+* Global api

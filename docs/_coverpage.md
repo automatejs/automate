@@ -1,6 +1,6 @@
 <!-- ![logo](media/logo.png) -->
 
-# automate <small>0.0.1</small>
+# automate <small>0.9.0</small>
 
 > A JavaScript library for building web view.
 
