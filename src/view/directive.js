@@ -56,7 +56,10 @@ export class Directive {
     // after linking
     $postlink() {
         this.afterLink && this.afterLink();
-        this.$change(this.$binding.value, this.$binding.oldValue);
+
+        if(this.$binding != null) {
+            this.$change(this.$binding.value, this.$binding.oldValue);
+        }
     }
 
     // the input value is changed

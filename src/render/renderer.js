@@ -147,21 +147,26 @@ export class Renderer {
     }
 
     compileAttr(vattr, context) {
-        vattr.nodeData.binding = this.createBinding(vattr.nodeValue, context);
+        var binding;
+        
+        if(vattr.nodeValue != null) {
+            binding = this.createBinding(vattr.nodeValue, context);
+            vattr.nodeData.binding = binding;
+        }
 
         if (vattr.nodeName.startsWith('@')) {
             vattr.nodeData.isEvent = true;
-            vattr.nodeData.binding.logical = true;
+            binding && (binding.logical = true);
             vattr.nodeData.name = vattr.nodeName.substr(1);
             vattr.nodeData.isDomEvent = utils.contains(domEvents, vattr.nodeData.name);
         }
         else if (vattr.nodeName.startsWith(':')) {
-            vattr.nodeData.binding.isExp = true;
+            binding && (binding.isExp = true);
             vattr.nodeData.name = vattr.nodeName.substr(1);
         }
         else if (vattr.nodeName.startsWith('*')) {
             vattr.nodeData.directive = true;
-            vattr.nodeData.binding.isExp = true;
+            binding && (binding.isExp = true);
             vattr.nodeData.name = vattr.nodeName.substr(1);
         }
         else {
@@ -174,7 +179,10 @@ export class Renderer {
             if (directive) {
                 vattr.nodeData.directive = this.scope.$newDirective(directive);
                 vattr.nodeData.directive.$$vattr = vattr;
-                vattr.nodeData.binding.assignment = vattr.nodeData.directive.$assignment;
+
+                if(binding) {
+                    binding.assignment = vattr.nodeData.directive.$assignment;
+                }
 
                 if (vattr.nodeData.directive.$compile()) {
                     vattr.nodeData.linker = vattr.nodeData.directive;
@@ -184,6 +192,10 @@ export class Renderer {
             else {
                 throw new Error('directive ' + vattr.nodeData.name + ' is not defined');
             }
+        }
+
+        if(!binding) {
+            return;
         }
 
         if (!(vattr.nodeData.isEvent || vattr.nodeData.directive)) {
@@ -199,7 +211,7 @@ export class Renderer {
             };
 
             if (vattr.velm.nodeData.component) {
-                vattr.nodeData.binding.registerAutomation(function (value) {
+                binding.registerAutomation(function (value) {
                     if (vattr.velm.nodeData.component.$hasProperty(vattr.nodeData.name)) {
                         vattr.velm.nodeData.component.$setProperty(vattr.nodeData.name, value);
                     }
@@ -209,11 +221,11 @@ export class Renderer {
                 });
             }
             else {
-                vattr.nodeData.binding.registerAutomation(setHtmlAttr);
+                binding.registerAutomation(setHtmlAttr);
             }
         }
 
-        vattr.nodeData.binding.compile();
+        binding.compile();
     }
 
     compileText(vtext, context) {
@@ -285,28 +297,33 @@ export class Renderer {
     }
 
     linkAttr(vattr) {
-        var elm = vattr.velm.elm;
+        var elm = vattr.velm.elm,
+            binding = vattr.nodeData.binding;
+
+        if(!binding) {
+            return;
+        }
 
         if (vattr.nodeData.isEvent) {
             if (vattr.nodeData.isDomEvent) {
                 elm.addEventListener(vattr.nodeData.name, function (e) {
-                    vattr.nodeData.binding.compute(new Local(e, elm));
+                    binding.compute(new Local(e, elm));
                 });
             }
             else if (vattr.velm.nodeData.component) {
                 vattr.velm.nodeData.component.$bind(vattr.nodeData.name, function (e) {
-                    vattr.nodeData.binding.compute(new Local(e, elm));
+                    binding.compute(new Local(e, elm));
                 });
             }
         }
         else {
-            vattr.nodeData.binding.link();
-            vattr.nodeData.binding.patch();
+            binding.link();
+            binding.patch();
         }
 
         // register binding change handler after first patch
         if(vattr.nodeData.directive) {
-            vattr.nodeData.binding.registerAutomation(function (newValue, oldValue) {
+            binding.registerAutomation(function (newValue, oldValue) {
                 vattr.nodeData.directive.$change(newValue, oldValue);
             });
         }
