@@ -2,7 +2,7 @@
 
 while you would like to encapsulate a ui control to resue in the application, please use component interface provided in the automate.
 
-component is a JavaScript class, it refers to ___web component__ standard, but what's more, it is reactive. while it is rendered, component instance is also as view model, the template can access all properties and methods with expression binding. but keep in mind, only the properties defined in the ___state___ and ___props___ is reactive. ___state___ is privated, ___props___ is published
+component is a JavaScript class, it refers to __web component__ standard, but what's more, it is reactive. while it is rendered, component instance is also as view model, the template can access all properties and methods with expression binding. but keep in mind, only the properties defined in the ___state___ and ___props___ is reactive. ___state___ is privated, ___props___ is published
 
 while definding a component, you can define published properties and events to comminucate with other components.
 

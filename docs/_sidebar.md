@@ -3,12 +3,23 @@
 * Gettings started
   * [Quick start](quickstart.md)
   * [Create a binding](binding.md)
-  * [Create a condition](condition.md)
-  * [Create a loop](repeat.md)
-  * [Create a component](component.md)
+  * [Conditional rendering](condition.md)
+  * [List rendering](repeat.md)
+  * [Bind class and style](classstyle.md)
+  * [Template syntax](template.md)
 
-* Commponent
+* [Component](component.md)
 
-* Directive
+* [Directive](direcive.md)
+
+* [Service](service.md)
+
+* [Filter](filter.md)
+  
+* [Namespace](namespace.md)
+  
+* [Module](module.md)
+
+* Reactivity principle
 
 * Global api

@@ -1,4 +1,4 @@
-# create a loop
+# list rendering
 
 Create a loop in the template is also possible, automate will render the specified template repeatedly accroding to data bound, directive ___m-repeat___ is responsible for this feature.
 

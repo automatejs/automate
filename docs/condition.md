@@ -1,4 +1,4 @@
-# create a condition
+# conditional rendering
 
 you are allowed to make condition logic in the template, it is achieved by directives ___m-if___, ___m-switch___, ___m-switch-when___ and ___m-switch-default___.
 
