@@ -1,20 +1,33 @@
 # template syntax
 
-Ths article shows the syntax supported in the template
+In the component template, you can bind value, bind execute handler, use component, directive and filter, the following content shows the syntax about how to use them.
 
 # binding
 
 in the template you can bind an JavaScript expression to specified text node, attribute vale and event handler.
 
-## bind value with ___{{ }}___ or ___:___
+## text
+
+> syntax ___{{ }}___
 
 ```
 <div>{{ state.content }}</div>
 
-<div :></div>
+<!-- conditional expression -->
+<div>{{ state.yes?'yes':'no' }}</div>
 ```
 
-## bind event with ___@___
+## attribute
+
+> syntax ___:___
+
+```
+<input :value="state.value" />
+```
+
+## event 
+
+> syntax ___@___
 
 ```
 <button @click="doSomething()"></button>
@@ -28,7 +41,9 @@ in the template you can bind an JavaScript expression to specified text node, at
 
 # decorator
 
-## nullable object
+## nullable
+
+> syntax ___?___
 
 By default, the evaluation logic is the same as JavaScript engine, access property of null or undefined will throw an error, but for template, it maybe make sense to ignore this error, you can add a decorator characctor ___?___ as postfix for object member. 
 
@@ -38,17 +53,23 @@ By default, the evaluation logic is the same as JavaScript engine, access proper
 
 # component
 
+> syntax ___component_name___
+
 ```
 <test-cmp></test-cmp>
 ```
 
 # directive
 
+> syntax ___*___
+
 ```
 <div *m-bind="content"></div>
 ```
 
 # filter
+
+> syntax ___|___
 
 ```
 <div *m-bind="content | filter"></div>
@@ -58,6 +79,8 @@ By default, the evaluation logic is the same as JavaScript engine, access proper
 ```
 
 # namespace
+
+> syntax ___[package].[name]___
 
 If two package has component with same name, you can identify them with namespace
 

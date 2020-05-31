@@ -1,4 +1,4 @@
-# create a component
+# component
 
 while you would like to encapsulate a ui control to resue in the application, please use component interface provided in the automate.
 
@@ -7,6 +7,22 @@ component is a JavaScript class, it refers to __web component__ standard, but wh
 while definding a component, you can define published properties and events to comminucate with other components.
 
 # define a component
+
+```
+<!-- define a web component with name "test-cmp" -->
+automate.namespace('sample').component('test-cmp', {
+    construct: function () {
+       // component contructor
+       // define propertys here
+    },
+    // define methods here
+}, {
+    // component configuration
+    template: '<template id="test-cmp"><div>it is a web component</div></template>'
+});
+```
+
+# use template id
 
 ```
 <!-- the template -->
@@ -24,7 +40,7 @@ automate.namespace('sample').component('test-cmp', {
 });
 ```
 
-# apply a component
+# use a component
 
 ```
 <!--use it with custom element tag -->
@@ -179,6 +195,24 @@ automate.namespace('sample').component('test-cmp', {
 
 </html>
 ```
+
+# configuration
+
+## template
+
+component template string
+
+## templateId
+
+html template element id value
+
+## alias
+
+alias object define short name for package name
+
+## inject
+
+inject object, inject service to the component instance
 
 # life cycle hoops
 

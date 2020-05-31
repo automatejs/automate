@@ -10,7 +10,7 @@
 
 * [Component](component.md)
 
-* [Directive](direcive.md)
+* [Directive](directive.md)
 
 * [Service](service.md)
 
