@@ -20,6 +20,8 @@
   
 * [Module](module.md)
 
-* Reactivity principle
+* [Reactivity](reactivity.md)
 
-* Global api
+* API
+
+* [Guide](guide.md)

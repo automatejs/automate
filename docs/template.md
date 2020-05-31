@@ -1,8 +1,8 @@
-# template syntax
+# Template syntax
 
 In the component template, you can bind value, bind execute handler, use component, directive and filter, the following content shows the syntax about how to use them.
 
-# binding
+# Binding
 
 in the template you can bind an JavaScript expression to specified text node, attribute vale and event handler.
 
@@ -39,7 +39,7 @@ in the template you can bind an JavaScript expression to specified text node, at
 <button @click="doSomething($element)"></button>
 ```
 
-# decorator
+# Decorator
 
 ## nullable
 
@@ -51,7 +51,7 @@ By default, the evaluation logic is the same as JavaScript engine, access proper
 <div>{{ obj?.content }}</div>
 ```
 
-# component
+# Component
 
 > syntax ___component_name___
 
@@ -59,7 +59,7 @@ By default, the evaluation logic is the same as JavaScript engine, access proper
 <test-cmp></test-cmp>
 ```
 
-# directive
+# Directive
 
 > syntax ___*___
 
@@ -67,7 +67,7 @@ By default, the evaluation logic is the same as JavaScript engine, access proper
 <div *m-bind="content"></div>
 ```
 
-# filter
+# Filter
 
 > syntax ___|___
 
@@ -78,7 +78,7 @@ By default, the evaluation logic is the same as JavaScript engine, access proper
 <div *m-bind="content | filter:arg1:arg2:..."></div>
 ```
 
-# namespace
+# Namespace
 
 > syntax ___[package].[name]___
 

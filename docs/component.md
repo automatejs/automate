@@ -1,4 +1,4 @@
-# component
+# Component
 
 while you would like to encapsulate a ui control to resue in the application, please use component interface provided in the automate.
 
@@ -6,7 +6,7 @@ component is a JavaScript class, it refers to __web component__ standard, but wh
 
 while definding a component, you can define published properties and events to comminucate with other components.
 
-# define component
+# Define component
 
 ```
 <!-- define a web component with name "test-cmp" -->
@@ -22,7 +22,7 @@ automate.namespace('sample').component('test-cmp', {
 });
 ```
 
-# use template id
+# Use template id
 
 ```
 <!-- the template -->
@@ -40,14 +40,14 @@ automate.namespace('sample').component('test-cmp', {
 });
 ```
 
-# use component
+# Use component
 
 ```
 <!--use it with custom element tag -->
 <test-cmp></test-cmp>
 ```
 
-# define property
+# Define property
 
 ```
 <!-- update template -->
@@ -69,7 +69,7 @@ automate.namespace('sample').component('test-cmp', {
 <test-cmp :name="state.name"></test-cmp>
 ```
 
-# define event
+# Define event
 
 > you can access the event data via property ___data___ in the event, access the event and target element via internal variable ___$event___, ___$element___
 
@@ -103,7 +103,7 @@ automate.namespace('sample').component('test-cmp', {
 <test-cmp :name="state.name" @renamed="onNameChange($event)"></test-cmp>
 ```
 
-# define slot
+# Define slot
 
 ```
 <!-- slot placeholder in the temlate -->
@@ -116,7 +116,7 @@ automate.namespace('sample').component('test-cmp', {
 </template>
 ```
 
-# use slot
+# Use slot
 
 ```
 <!-- define slot content under the web component element -->
@@ -131,7 +131,7 @@ automate.namespace('sample').component('test-cmp', {
 </test-cmp>
 ```
 
-# sample
+# Sample
 
 ```
 <!-- index.html -->
@@ -198,7 +198,7 @@ automate.namespace('sample').component('test-cmp', {
 </html>
 ```
 
-# configuration
+# Configuration
 
 ## template
 
@@ -216,7 +216,7 @@ alias object define short name for package name
 
 inject object, inject service to the component instance
 
-# life cycle hoops
+# Life cycle hoops
 
 ## onDestroy
 

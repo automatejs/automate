@@ -1,16 +1,16 @@
-# directive
+# Directive
 
 Directive allows you handle template via life cylce hoops during rendering, you can encapsulate concrete ui logic here, it is recommended to put all code related to handle html elements here.
 
-# create directive
+# Create directive
 
 ```
 
 ```
 
-# use directive
+# Use directive
 
-# life cycle hoops
+# Life cycle hoops
 
 ## onCompile
 
