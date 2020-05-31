@@ -6,7 +6,7 @@ component is a JavaScript class, it refers to __web component__ standard, but wh
 
 while definding a component, you can define published properties and events to comminucate with other components.
 
-# define a component
+# define component
 
 ```
 <!-- define a web component with name "test-cmp" -->
@@ -40,14 +40,14 @@ automate.namespace('sample').component('test-cmp', {
 });
 ```
 
-# use a component
+# use component
 
 ```
 <!--use it with custom element tag -->
 <test-cmp></test-cmp>
 ```
 
-# define component property
+# define property
 
 ```
 <!-- update template -->
@@ -69,7 +69,7 @@ automate.namespace('sample').component('test-cmp', {
 <test-cmp :name="state.name"></test-cmp>
 ```
 
-# define component event
+# define event
 
 > you can access the event data via property ___data___ in the event, access the event and target element via internal variable ___$event___, ___$element___
 
@@ -107,7 +107,6 @@ automate.namespace('sample').component('test-cmp', {
 
 ```
 <!-- slot placeholder in the temlate -->
-
  <template id="test-cmp">
     <div>it is a web component</div>
     <div>name: {{ props.name }}</div>
@@ -115,9 +114,12 @@ automate.namespace('sample').component('test-cmp', {
     <slot name="part2"></slot>
     <button @click="rename()">rename</button>
 </template>
+```
 
+# use slot
+
+```
 <!-- define slot content under the web component element -->
-
 <test-cmp :name="state.name" @renamed="onNameChange($event)">
     <div slot="part1">
         this is part 1
