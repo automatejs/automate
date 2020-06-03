@@ -74,7 +74,7 @@ class RepeatDirective extends Directive {
             fragment.appendChild(renderer.view);
         });
 
-        this.buffer.entries(function (list) {
+        this.buffer.forEach(function (list) {
             list.forEach(function (renderer) {
                 renderer.destroy();
             });

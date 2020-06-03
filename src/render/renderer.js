@@ -159,6 +159,8 @@ export class Renderer {
         // cache the generated elements
         dom.getChildrenOfElement(view).forEach(elm => this.elms.push(elm));
 
+        this.bindTranslateChanged();
+
         return view;
     }
 
