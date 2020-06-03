@@ -1,7 +1,7 @@
 import * as utils from '../utils';
 import { AST, NullExpressionNode } from './model';
-import { parseExp } from './exp-api';
 import { ExpBuilder } from './exp-builder';
+import { parseExp }  from './exp-api';
 
 export class Evaluator {
     constructor(scope, options) {
@@ -12,22 +12,16 @@ export class Evaluator {
         }, options);
         this.program = null;
         this.locals = null;
-        this.buffer = {};
         this.builder = new ExpBuilder();
-    }
-
-    parse(exp) {
-        var program = this.buffer[exp];
-        if (!program) {
-            program = parseExp(exp);
-            this.buffer[exp] = program;
-        }
-        return program;
+        this.parser = scope.$parser ||  {
+            parseExpression: parseExp
+        };
     }
 
     // get value from expression
     evaluate(exp, locals) {
-        return this.evaluateProgram(this.parse(exp), locals);
+        var program = this.parser.parseExpression(exp);
+        return this.evaluateProgram(program, locals);
     }
 
     evaluateProgram(program, locals) {
@@ -49,7 +43,8 @@ export class Evaluator {
 
     // set value to expression
     assign(exp, value, locals) {
-        return this.assignProgram(this.parse(exp), value, locals);
+        var program = this.parser.parseExpression(exp);
+        return this.assignProgram(program, value, locals);
     }
 
     assignProgram(program, value, locals) {

@@ -1,5 +1,6 @@
 import { Component } from '../view';
 import { component } from '../decorator';
+import { Renderer } from '../render';
 
 @component({
     namespace: 'automate',
@@ -15,10 +16,10 @@ class SlotComponent extends Component {
         var slots = this.$$parent.slots;
         var template = slots[this.props.name];
 
-        if(template) {
-            this.$$view = this.$$parent.$$renderer.render(template);
+        if (template) {
+            this.$$renderer = new Renderer(this.$$parent, template);
+            this.$$renderer.render();
+            return this.$$renderer;
         }
-
-        return this.$$view;
     }
 }

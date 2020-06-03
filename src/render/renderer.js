@@ -1,7 +1,7 @@
 import * as utils from '../utils';
 import * as dom from '../dom';
-import { parseTpl, isVText, isVComment, isVElm } from '../tpl';
-import { Local } from '../core';
+import { isVText, isVComment, isVElm } from '../tpl';
+import { Local, events } from '../core';
 import { Binding } from './binding';
 import { M_CMP_CLASS } from '../css';
 
@@ -33,187 +33,276 @@ var eventText = 'load unload change submit reset select blur focus abort keydown
 var domEvents = eventText.split(' ');
 
 export class Renderer {
-    constructor(scope) {
+    get injector() {
+        return this.scope.$injector;
+    }
+
+    get nsAlias() {
+        return this.scope.$data.alias;
+    }
+
+    get view() {
+        var view = document.createDocumentFragment();
+        this.elms.forEach(elm => view.appendChild(elm));
+        return view;
+    }
+
+    constructor(scope, template, locals) {
         this.scope = scope;
-        this.buffer = {
+        this.template = template;
+        this.locals = locals;
+        this.elms = [];
+        this.vnodes = [];
+        this.type = {
             components: {},
             directives: {}
-        }
-    }
-
-    createBinding(text, context) {
-        return new Binding(this.scope, text, context.locals);
-    }
-
-    render(tpl, locals) {
-        var fragment = document.createDocumentFragment();
-
-        var vnodes = parseTpl(tpl);
-
-        var context = {
-            locals: locals,
+        };
+        this.entity = {
+            bindings: [],
+            components: [],
             directives: []
         };
-
-        this.compileNodes(vnodes, context);
-
-        // context.directives.forEach(directive => {
-        //     directive.$prelink();
-        // });
-
-        this.linkNodes(vnodes, context).forEach(elm => {
-            fragment.appendChild(elm);
-        });
-
-        context.directives.forEach(directive => {
-            directive.$postlink();
-        });
-
-        return fragment;
+        this.parser = scope.$parser;
     }
 
-    compileNodes(vnodes, context) {
-        vnodes.forEach(vnode => {
-            this.compileNode(vnode, context);
-        });
+    newBinding(text) {
+        var binding = new Binding(this.scope, text, this.locals);
+        this.entity.bindings.push(binding);
+        return binding;
     }
 
-    compileNode(vnode, context) {
-        if (isVText(vnode)) {
-            this.compileText(vnode, context);
+    newComponent(cls) {
+        var child = this.injector.createComponent(cls);
+
+        this.scope.$appendChild(child);
+        this.entity.components.push(child);
+
+        return child;
+    }
+
+    newDirective(cls) {
+        var directive = this.injector.createDirective(cls);
+
+        directive.$$scope = this.scope;
+
+        return directive;
+    }
+
+    recognizeComponent(velm) {
+        var identifier, component,
+            name = velm.nodeName,
+            buffer = this.type.components;
+
+        if (buffer[name] !== undefined) {
+            component = buffer[name];
+        } else {
+            identifier = this.injector.parseFullName(name, this.nsAlias);
+            component = this.injector.getComponent(identifier.key, identifier.ns);
+            buffer[name] = component;
         }
-        else if(isVComment(vnode, context)){
-            this.compileComment(vnode, context);
+
+        // velm.nodeData.identifier = identifier;
+
+        return component;
+    }
+
+    recognizeDirective(vattr) {
+        var identifier, directive,
+            name = vattr.nodeData.name,
+            buffer = this.type.directives;
+
+        if(buffer[name] !== undefined) {
+            directive = buffer[name];
         }
         else {
-            this.compileElm(vnode, context);
+            identifier = this.injector.parseFullName(name, this.nsAlias);
+            directive = this.injector.getDirective(identifier.key, identifier.ns);
+            buffer[name] = directive;
         }
+
+        // vattr.nodeData.identifier = identifier;
+
+        return directive;
     }
 
-    linkNodes(vnodes, context) {
-        return vnodes.map(vnode => {
-            return this.linkNode(vnode, context);
+    bindTranslateChanged() {
+        var bindings = this.entity.bindings;
+
+        if(!bindings.length) {
+            return;
+        }
+
+        // update text while translate changed
+        this.unbindTranslateChanged = events.translateChanged.on(() => {
+            bindings.forEach(binding => {
+                binding.detect();
+                binding.patch();
+            });
         });
     }
 
-    linkNode(vnode, context) {
-        if (isVText(vnode)) {
-            return this.linkText(vnode, context);
-        }
+    render() {
+        // must set a root element for directive life cycle "afterLink" hoops
+        var view = document.createDocumentFragment();
 
-        if(isVComment(vnode, context)) {
-            return this.linkComment(vnode, context);
-        }
+        this.vnodes = this.parser.parseTemplate(this.template);
 
-        return this.linkElm(vnode, context);
+        this.compileNodes(this.vnodes);
+
+        // this.entity.directives.forEach(directive => directive.$prelink());
+
+        this.linkNodes(this.vnodes).forEach(elm => view.appendChild(elm));
+
+        // call directive life cycle hoops
+        this.entity.directives.forEach(directive => directive.$postlink());
+
+        // cache the generated elements
+        dom.getChildrenOfElement(view).forEach(elm => this.elms.push(elm));
+
+        return view;
     }
 
-    compileElm(velm, context) {
-        velm.nodeData.component = this.recognizeComponent(velm);
+    compileNodes(vnodes) {
+        vnodes.forEach(vnode => this.compileNode(vnode));
+    }
+
+    compileNode(vnode) {
+        if (isVText(vnode)) {
+            this.compileText(vnode);
+        }
+        else if(isVComment(vnode)){
+            this.compileComment(vnode);
+        }
+        else {
+            this.compileElm(vnode);
+        }
+    }
+
+    linkNodes(vnodes) {
+        return vnodes.map(vnode => this.linkNode(vnode));
+    }
+
+    linkNode(vnode) {
+        if (isVText(vnode)) {
+            return this.linkText(vnode);
+        }
+
+        if(isVComment(vnode)) {
+            return this.linkComment(vnode);
+        }
+
+        return this.linkElm(vnode);
+    }
+
+    compileElm(velm) {
+        var elmData = velm.nodeData;
+
+        elmData.component = this.recognizeComponent(velm);
 
         var directives = [];
         var customLinker = velm.vattrs.some(vattr => {
-            this.compileAttr(vattr, context);
+            var attrData = vattr.nodeData;
 
-            if (vattr.nodeData.directive != null) {
-                directives.push(vattr.nodeData.directive);
-                velm.nodeData.linker = vattr.nodeData.linker;
-                return velm.nodeData.linker != null;
+            this.compileAttr(vattr);
+
+            if (attrData.directive != null) {
+                directives.push(attrData.directive);
+                elmData.linker = attrData.linker;
+                return elmData.linker != null;
             }
 
             return false;
         });
 
         // sort directive according to its priority
-        utils.orderBy(directives, function (directive) {
-            return directive.$priority;
-        }).forEach(directive => {
-            context.directives.push(directive);
-        });
+        utils.orderBy(directives, directive => directive.$priority).forEach(directive => this.entity.directives.push(directive));
 
-        velm.nodeData.directives = directives;
+        elmData.directives = directives;
 
         // directive defines custom linker for this virtual node, render engine will not render it according to default behavior
         if (customLinker) {
             return;
         }
 
-        if (velm.nodeData.component) {
-            velm.nodeData.slots = this.seekSlot(velm);
+        if (elmData.component) {
+            elmData.slots = this.seekSlot(velm);
         }
         else {
-            this.compileNodes(velm.childNodes, context);
+            this.compileNodes(velm.childNodes);
         }
     }
 
-    compileAttr(vattr, context) {
-        var binding;
-        
-        if(vattr.nodeValue != null) {
-            binding = this.createBinding(vattr.nodeValue, context);
-            vattr.nodeData.binding = binding;
+    compileAttr(vattr) {
+        var attrName = vattr.nodeName, attrValue = vattr.nodeValue,
+            attrData = vattr.nodeData, binding;
+
+        if(attrValue != null) {
+            binding = this.newBinding(attrValue);
+            attrData.binding = binding;
         }
 
-        if (vattr.nodeName.startsWith('@')) {
-            vattr.nodeData.isEvent = true;
+        if (attrName.startsWith('@')) {
+            attrData.isEvent = true;
+            attrData.name = attrName.substr(1);
+            attrData.isDomEvent = utils.contains(domEvents, attrData.name);
             binding && (binding.logical = true);
-            vattr.nodeData.name = vattr.nodeName.substr(1);
-            vattr.nodeData.isDomEvent = utils.contains(domEvents, vattr.nodeData.name);
         }
-        else if (vattr.nodeName.startsWith(':')) {
+        else if (attrName.startsWith(':')) {
+            attrData.name = attrName.substr(1);
             binding && (binding.isExp = true);
-            vattr.nodeData.name = vattr.nodeName.substr(1);
         }
-        else if (vattr.nodeName.startsWith('*')) {
-            vattr.nodeData.directive = true;
+        else if (attrName.startsWith('*')) {
+            attrData.directive = true;
+            attrData.name = attrName.substr(1);
             binding && (binding.isExp = true);
-            vattr.nodeData.name = vattr.nodeName.substr(1);
         }
         else {
-            vattr.nodeData.name = vattr.nodeName;
+            attrData.name = attrName;
         }
 
-        if (vattr.nodeData.directive) {
+        if (attrData.directive) {
             var directive = this.recognizeDirective(vattr);
 
             if (directive) {
-                vattr.nodeData.directive = this.scope.$newDirective(directive);
-                vattr.nodeData.directive.$$vattr = vattr;
+                attrData.directive = this.newDirective(directive);
+                attrData.directive.$$vattr = vattr;
 
-                if(binding) {
-                    binding.assignment = vattr.nodeData.directive.$assignment;
+                if(binding != null) {
+                    binding.assignment = attrData.directive.$assignment;
                 }
 
-                if (vattr.nodeData.directive.$compile()) {
-                    vattr.nodeData.linker = vattr.nodeData.directive;
+                if (attrData.directive.$compile()) {
+                    attrData.linker = attrData.directive;
                     return;
                 }
             }
             else {
-                throw new Error('directive ' + vattr.nodeData.name + ' is not defined');
+                throw new Error('directive ' + attrData.name + ' is not defined');
             }
         }
 
-        if(!binding) {
+        if(binding == null) {
             return;
         }
 
-        if (!(vattr.nodeData.isEvent || vattr.nodeData.directive)) {
+        if (!(attrData.isEvent || attrData.directive)) {
             var setHtmlAttr = function (value) {
                 var elm = vattr.velm.elm;
 
-                if (vattr.nodeData.name.startsWith('style')) {
-                    utils.setProperty(elm, vattr.nodeData.name, value);
+                if (attrData.name.startsWith('style')) {
+                    utils.setProperty(elm, attrData.name, value);
                 }
                 else {
-                    elm.setAttribute(vattr.nodeData.name, value);
+                    elm.setAttribute(attrData.name, value);
                 }
             };
 
             if (vattr.velm.nodeData.component) {
                 binding.registerAutomation(function (value) {
-                    if (vattr.velm.nodeData.component.$hasProperty(vattr.nodeData.name)) {
-                        vattr.velm.nodeData.component.$setProperty(vattr.nodeData.name, value);
+                    var component = vattr.velm.nodeData.component;
+
+                    if (component.$hasProperty(attrData.name)) {
+                        component.$setProperty(attrData.name, value);
                     }
                     else {
                         setHtmlAttr(value);
@@ -228,8 +317,8 @@ export class Renderer {
         binding.compile();
     }
 
-    compileText(vtext, context) {
-        vtext.nodeData.binding = this.createBinding(vtext.nodeValue, context);
+    compileText(vtext) {
+        vtext.nodeData.binding = this.newBinding(vtext.nodeValue);
         vtext.nodeData.binding.registerAutomation(function (value) {
             var elm, newTextNode = document.createTextNode(value);
 
@@ -261,59 +350,52 @@ export class Renderer {
     }
 
     linkElm(velm) {
-        if (velm.nodeData.linker != null) {
-            return velm.nodeData.linker.$link();
+        var elmData = velm.nodeData;
+
+        if (elmData.linker != null) {
+            return elmData.linker.$link();
         }
 
         velm.elm = document.createElement(velm.nodeName);
 
-        if (velm.nodeData.component) {
-            var instance = this.scope.$newComponent(velm.nodeData.component);
+        if (elmData.component) {
+            var instance = this.newComponent(elmData.component);
 
-            velm.nodeData.component = instance;
+            elmData.component = instance;
 
             dom.addClass(velm.elm, M_CMP_CLASS);
 
-            velm.vattrs.forEach(vattr => {
-                this.linkAttr(vattr);
-            });
+            velm.vattrs.forEach(vattr => this.linkAttr(vattr));
 
             instance.$$velm = velm;
-            instance.$setSlot(velm.nodeData.slots);
+            instance.$setSlot(elmData.slots);
             instance.$render();
             instance.$mount(velm.elm);
         }
         else {
-            velm.vattrs.forEach(vattr => {
-                this.linkAttr(vattr);
-            });
-
-            velm.childNodes.forEach(child => {
-                velm.elm.appendChild(this.linkNode(child));
-            });
+            velm.vattrs.forEach(vattr => this.linkAttr(vattr));
+            velm.childNodes.forEach(child => velm.elm.appendChild(this.linkNode(child)));
         }
 
         return velm.elm;
     }
 
     linkAttr(vattr) {
-        var elm = vattr.velm.elm,
-            binding = vattr.nodeData.binding;
+        var velm = vattr.velm,
+            elm = velm.elm,
+            attrData = vattr.nodeData,
+            binding = attrData.binding;
 
-        if(!binding) {
+        if(binding == null) {
             return;
         }
 
-        if (vattr.nodeData.isEvent) {
-            if (vattr.nodeData.isDomEvent) {
-                elm.addEventListener(vattr.nodeData.name, function (e) {
-                    binding.compute(new Local(e, elm));
-                });
+        if (attrData.isEvent) {
+            if (attrData.isDomEvent) {
+                elm.addEventListener(attrData.name, e => binding.compute(new Local(e, elm)));
             }
-            else if (vattr.velm.nodeData.component) {
-                vattr.velm.nodeData.component.$bind(vattr.nodeData.name, function (e) {
-                    binding.compute(new Local(e, elm));
-                });
+            else if (velm.nodeData.component) {
+                velm.nodeData.component.$bind(attrData.name, e => binding.compute(new Local(e, elm)));
             }
         }
         else {
@@ -322,10 +404,8 @@ export class Renderer {
         }
 
         // register binding change handler after first patch
-        if(vattr.nodeData.directive) {
-            binding.registerAutomation(function (newValue, oldValue) {
-                vattr.nodeData.directive.$change(newValue, oldValue);
-            });
+        if(attrData.directive) {
+            binding.registerAutomation((newValue, oldValue) => attrData.directive.$change(newValue, oldValue));
         }
     }
 
@@ -355,40 +435,16 @@ export class Renderer {
         return  slots;
     }
 
-    recognizeComponent(velm) {
-        var identifier, component,
-            name = velm.nodeName,
-            buffer = this.buffer.components;
+    destroy() {
+        this.unbindTranslateChanged();
+        this.entity.components.forEach(item => item.$destroy());
+        this.entity.directives.forEach(item => item.$destroy());
+        this.entity.bindings.forEach(item => item.destroy());
+        this.vnodes.forEach(item => item.destroy());
 
-        if (buffer[name] !== undefined) {
-            component = buffer[name];
-        } else {
-            identifier = this.scope.$parseFullName(name);
-            component = this.scope.$getComponent(identifier.key, identifier.ns);
-            buffer[name] = component;
-        }
-
-        // velm.nodeData.identifier = identifier;
-
-        return component;
-    }
-
-    recognizeDirective(vattr) {
-        var identifier, directive,
-            name = vattr.nodeData.name,
-            buffer = this.buffer.directives;
-
-        if(buffer[name] !== undefined) {
-            directive = buffer[name];
-        }
-        else {
-            identifier = this.scope.$parseFullName(vattr.nodeData.name);
-            directive = this.scope.$getDirective(identifier.key, identifier.ns);
-            buffer[name] = directive;
-        }
-
-        // vattr.nodeData.identifier = identifier;
-
-        return directive;
+        this.entity.components.length = 0;
+        this.entity.directives.length = 0;
+        this.entity.bindings.length = 0;
+        this.vnodes.length = 0;
     }
 }

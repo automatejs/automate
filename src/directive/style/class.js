@@ -17,11 +17,11 @@ export class ClassDirective extends Directive {
         }
 
         if (oldClass) {
-            dom.removeClass(this.$element, oldClass.join(''));
+            dom.removeClass(this.$element, oldClass.join(' '));
         }
 
         if (newClass) {
-            dom.addClass(this.$element, newClass.join(''));
+            dom.addClass(this.$element, newClass.join(' '));
         }
     }
 

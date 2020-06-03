@@ -1,5 +1,6 @@
 import * as utils from '../utils';
 import { isMessage } from '../core';
+import { Parser } from './parser';
 import { Observer, handler } from '../observer';
 import { Renderer } from '../render';
 import { injector } from './injector';
@@ -7,20 +8,19 @@ import { Evaluator } from '../exp';
 
 export function componentConstructor(data) {
     this.$$velm = null;
-    this.$$view = null;
     this.$$parent = null;
     this.$$children = [];
-    this.$$directives = [];
-    this.$$data = this.$initData(data);
-    this.$$injector = injector;
-    this.$$renderer = new Renderer(this);
+    this.$$renderer = null;
     this.$$observer = new Observer(this);
-    this.$$evaluator = new Evaluator(this);
+    this.$injector = injector;
+    this.$parser = new Parser();
+    this.$evaluator = new Evaluator(this);
     this.slots = {};
     this.events = {};
     this.props = this.$delegate({});
     this.state = this.$delegate({});
-    injector.injectServices(this, this.$$data);
+    this.$data = utils.merge(this.$$metadata, data);
+    injector.injectServices(this, this.$data);
 }
 
 export class Component {
@@ -40,51 +40,13 @@ export class Component {
         this.props = this.$delegate(props);
     }
 
-    constructor() {
-        componentConstructor.call(this);
-    }
-
-    $initData(data) {
-        return utils.merge(this.$$metadata, data);
-    }
-
-    $setData(data) {
-        utils.extend(this.$$data, data);
-    }
-
-    $getNsAlias() {
-        return this.$$data.alias;
-    }
-
-    $parseFullName(fullName) {
-        return this.$$injector.parseFullName(fullName, this.$getNsAlias());
-    }
-
-    $getComponent(key, namespace) {
-        return this.$$injector.getComponent(key, namespace);
-    }
-
-    $newComponent(cls) {
-        var child = this.$$injector.createComponent(cls);
-        child.$$parent = this;
-        this.$$children.push(child);
-        return child;
-    }
-
-    $getDirective(key, namespace) {
-        return this.$$injector.getDirective(key, namespace);
-    }
-
-    $newDirective(cls) {
-        var directive = this.$$injector.createDirective(cls);
-        directive.$$scope = this;
-        this.$$directives.push(directive);
-        return directive;
+    constructor(data) {
+        componentConstructor.call(this, data);
     }
 
     $getFilter(fullName) {
-        var identifier = this.$parseFullName(fullName);
-        return this.$$injector.createFilter(identifier.key, identifier.ns);
+        var identifier = this.$injector.parseFullName(fullName, this.$data.alias);
+        return this.$injector.createFilter(identifier.key, identifier.ns);
     }
 
     $hasProperty(key) {
@@ -135,15 +97,15 @@ export class Component {
     }
 
     $eval(exp, locals) {
-        return this.$$evaluator.evaluate(exp, locals);
+        return this.$evaluator.evaluate(exp, locals);
     }
 
     $assign(exp, value, locals) {
-        return this.$$evaluator.assign(exp, value, locals);
+        return this.$evaluator.assign(exp, value, locals);
     }
 
     $getTemplate() {
-        var data = this.$$data;
+        var data = this.$data;
 
         if (utils.isString(data.template)) {
             return data.template;
@@ -162,8 +124,9 @@ export class Component {
 
     $render() {
         var template = this.$getTemplate();
-        this.$$view = this.$$renderer.render(template);
-        return this.$$view;
+        this.$$renderer = new Renderer(this, template);
+        this.$$renderer.render();
+        return this.$$renderer;
     }
 
     $mount(selectorOrElement) {
@@ -176,27 +139,42 @@ export class Component {
             element = selectorOrElement;
         }
 
-        element.appendChild(this.$$view);
+        if(this.$$renderer == null) {
+            throw new Error('current component is not rendered');
+        }
+
+        element.appendChild(this.$$renderer.view);
     }
 
     $unmount() {
 
     }
 
+    $appendChild(child) {
+        this.$$children.push(child);
+        child.$$parent = this;
+    }
+
+    $removeChild(child) {
+        var index = this.$$children.indexOf(child);
+
+        if (index !== -1) {
+            this.$$children.splice(index, 1);
+            child.$$parent = null;
+        }
+    }
+
     $destroy() {
         this.$$observer.destroy();
 
-        this.$$children.forEach(child => {
-            child.$destroy();
-        });
-
-        this.$$directives.forEach(item => {
-            item.$destroy();
-        });
+        if(this.$$renderer != null) {
+            this.$$renderer.destroy();
+        }
 
         this.onDestroy && this.onDestroy();
-        this.$$parent = null;
-        this.$$children.length = 0;
-        this.$$directives.length = 0;
+
+        if(this.$$parent != null) {
+            this.$$parent.$removeChild(this);
+        }
     }
 }

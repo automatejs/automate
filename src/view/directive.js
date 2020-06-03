@@ -1,13 +1,18 @@
 import * as dom from '../dom';
+import * as utils from '../utils';
 import { M_HIDE_CLASS } from '../css';
+import { Renderer } from '../render';
+import { injector } from './injector';
 
-export function directiveConstructor() {
+export function directiveConstructor(data) {
     this.$$scope = null;
     this.$$vattr = null;
     this.$priority = 9;
     // binding text is a assignment
     this.$assignment = false;
     this.$placeholder = null;
+    this.$data = utils.merge(this.$$metadata, data);
+    injector.injectServices(this, this.$data);
 }
 
 export class Directive {
@@ -17,10 +22,6 @@ export class Directive {
 
     get $scope() {
         return this.$$scope;
-    }
-
-    get $renderer() {
-        return this.$scope.$$renderer;
     }
 
     get $element() {
@@ -35,8 +36,8 @@ export class Directive {
         return this.$$vattr.velm.nodeData.component;
     }
 
-    constructor(metadata) {
-        directiveConstructor.call(this, metadata);
+    constructor(data) {
+        directiveConstructor.call(this, data);
     }
 
     // while compiling
@@ -110,5 +111,13 @@ export class Directive {
         } else {
             dom.removeClass(this.$element, M_HIDE_CLASS);
         }
+    }
+
+    $render(template, locals) {
+        var renderer = new Renderer(this.$scope, template, locals);
+
+        renderer.render();
+
+        return renderer;
     }
 }

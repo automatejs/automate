@@ -48,8 +48,8 @@ export class Observer {
         this.accessors = {};
         this.listeners = [];
         this.watcher = new Watcher();
-        this.analyser = new Analyser();
-        this.delayer = new Delayer(this.notify);
+        this.analyser = new Analyser(scope.$parser);
+        this.delayer = new Delayer(this.notify, 16);
         this.evaluator =  new Evaluator(this.scope, {
             allowNull: true
         });

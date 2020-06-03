@@ -1,4 +1,4 @@
-import { events } from './events';
+import { events } from '../core';
 import { getTarget } from './proxy';
 
 class ObjectListener {
@@ -45,38 +45,16 @@ class ObjectListener {
 
 export class Watcher {
     constructor() {
-        this.onPropChanging = e => {
-            this.handlePropChanging(e.data);
-        };
-
-        this.onPropChanged = e => {
-            this.handlePropChanged(e.data);
-        };
-
         this.listeners = [];
-        this.validators = [];
-        this.init();
+        this.offPropertyChanged = events.propertyChanged.on(e => this.handlePropertyChanged(e.data));
     }
 
-    init() {
-        events.propChanging.on(this.onPropChanging);
-        events.propChanged.on(this.onPropChanged);
-    }
-
-    handlePropChanging(args) {
-        var listener = this.getListener(this.validators, args.target);
+    handlePropertyChanged(data) {
+        var listener = this.getListener(this.listeners, data.target);
 
         if (listener != null) {
-            listener.fireKey(args.key, args);
-        }
-    }
-
-    handlePropChanged(args) {
-        var listener = this.getListener(this.listeners, args.target);
-
-        if (listener != null) {
-            listener.fireKey(args.key, args);
-            listener.fireKey('*', args);
+            listener.fireKey(data.key, data);
+            listener.fireKey('*', data);
         }
     }
 
@@ -118,21 +96,8 @@ export class Watcher {
         };
     }
 
-    validate(target, key, action) {
-        var listener = this.getOrCreateListener(this.validators, getTarget(target));
-
-        listener.registerKey(key, action);
-
-        return function () {
-            listener.unregisterKey(key, action);
-        };
-    }
-
     destroy() {
         this.listeners.length = 0;
-        this.validators.length = 0;
-
-        events.propChanging.off(this.onPropChanging);
-        events.propChanged.off(this.onPropChanged);
+        this.offPropertyChanged();
     }
 }

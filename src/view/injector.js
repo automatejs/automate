@@ -7,6 +7,7 @@ export class Injector {
     constructor() {
         this.classContainer = {};
         this.instanceContainer = {};
+        this.serviceStack = [];
     }
 
     getClassContainer(roleId) {
@@ -252,8 +253,23 @@ export class Injector {
         return result;
     }
 
-    injectServices(instance, metadata) {
-        var self = this;
+    injectServices(instance, metadata, checkLoopDependency) {
+        var self = this, serviceFullName, hasLoopDependency = false;
+
+        if(checkLoopDependency) {
+            // creating a service instance at the moment
+            serviceFullName = utils.format('{0}.{1}', metadata.namespace, metadata.key);
+            hasLoopDependency = this.serviceStack.indexOf(serviceFullName) === -1;
+
+            this.serviceStack.push(serviceFullName);
+
+            if (hasLoopDependency) {
+                // clear service dependency stack
+                this.serviceStack.length = 0;
+                // occurs loop dependency
+                throw new Error("Loop dependency: " + this.serviceStack.join('->'));
+            }
+        }
 
         if (metadata && utils.isObject(metadata.inject)) {
             utils.forEach(metadata.inject, function (service, key) {
@@ -276,6 +292,10 @@ export class Injector {
                     }
                 });
             });
+        }
+
+        if(checkLoopDependency) {
+            this.serviceStack.pop();
         }
     }
 }

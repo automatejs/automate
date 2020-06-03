@@ -1,6 +1,5 @@
-import * as utils from '../utils';
 import { AST } from './model';
-import { parseExp } from './exp-api';
+import { parseExp }  from './exp-api';
 import { ExpBuilder } from './exp-builder';
 
 class Accessor {
@@ -20,11 +19,13 @@ class Accessor {
 }
 
 export class Analyser {
-    constructor() {
+    constructor(parser) {
+        this.parser = parser || {
+            parseExpression: parseExp
+        };
         this.program = null;
         this.accessor = {};
         this.builder = new ExpBuilder();
-        this.buffer = {};
     }
 
     createAccessor(key, callee, exp) {
@@ -35,25 +36,15 @@ export class Analyser {
         return this.accessor[key];
     }
 
-    parse(exp) {
-        var program = this.buffer[exp];
-        if (!program) {
-            program = parseExp(exp);
-            this.buffer[exp] = program;
-        }
-        return program;
-    }
-
     analyse(exp) {
-        return this.analyseProgram(this.parse(exp));
+        var program = this.parser.parseExpression(exp);
+        return this.analyseProgram(program);
     }
 
     analyseProgram(program) {
         this.accessor = {};
         this.program = program;
-        program.childNodes.forEach(child => {
-            this.analyseNode(child);
-        });
+        program.childNodes.forEach(child => this.analyseNode(child));
         return this.accessor;
     }
 
@@ -106,9 +97,7 @@ export class Analyser {
     }
 
     analyseExpression(exp) {
-        exp.childNodes.forEach(child => {
-            this.analyseNode(child);
-        });
+        exp.childNodes.forEach(child => this.analyseNode(child));
     }
 
     analyseAssignment(assignment) {
@@ -136,9 +125,7 @@ export class Analyser {
     }
 
     analyseCall(call) {
-        call.args.forEach(arg => {
-            this.analyseNode(arg);
-        });
+        call.args.forEach(arg => this.analyseNode(arg));
 
         if (!call.filter) {
             this.analyseNode(call.callee, { callee: true });
@@ -192,14 +179,10 @@ export class Analyser {
     }
 
     analyseObject(obj) {
-        obj.properties.forEach(item => {
-            this.analyseNode(item);
-        });
+        obj.properties.forEach(item => this.analyseNode(item));
     }
 
     analyseArray(arr) {
-        arr.childNodes.forEach(child => {
-            this.analyse(child);
-        });
+        arr.childNodes.forEach(child => this.analyse(child));
     }
 }

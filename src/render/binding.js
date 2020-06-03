@@ -136,6 +136,8 @@ export class Binding {
     }
 
     destroy() {
-
+        this.expressions.forEach(exp => {
+            exp.destroy();
+        });
     }
 }

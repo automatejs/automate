@@ -1,5 +1,3 @@
-import * as utils from '../utils';
-
 export class Message {
     constructor() {
         this.data = {};
@@ -7,32 +5,32 @@ export class Message {
     }
 
     on(fn) {
-        this.handlers.push(fn);
+        var index = this.handlers.indexOf(fn);
+
+        // not found
+        if(index === -1){
+            this.handlers.push(fn);
+        }
+        else {
+            throw new Error('can not register same event handler more than once');
+        }
+
+        return () => this.off(fn);
     }
 
     off(fn) {
-        for (var i = 0; i < this.handlers.length; i++) {
-            if (this.handlers[i] === fn) {
-                this.handlers.splice(i, 1);
-            }
+        var index = this.handlers.indexOf(fn);
+
+        if (index !== -1) {
+            this.handlers.splice(index, 1);
         }
     }
 
     fire(data, scope) {
-        var returnValue;
         scope = scope || this;
+        // attach event data
         this.data = data || {};
-        for (var i = 0; i < this.handlers.length; i++) {
-            if (utils.isFunction(this.handlers[i])) {
-                returnValue = this.handlers[i].call(scope, this);
-            }
-        }
-        return returnValue;
+
+        this.handlers.forEach(handler => handler.call(scope, this));
     }
 }
-
-function isMessage(obj) {
-    return obj instanceof Message;
-}
-
-export { isMessage }

@@ -13,6 +13,8 @@ class RepeatDirective extends Directive {
         this.itemExp = '';
         this.itemsExp = '';
         this.itemTemplate = '';
+        this.buffer = new Map();
+        this.unwatchCollection = null;
     }
 
     onCompile(velm, vattr) {
@@ -42,7 +44,7 @@ class RepeatDirective extends Directive {
         fragment.appendChild(this.render(scope));
         fragment.appendChild(footer);
 
-        scope.$watchCollection(this.itemsExp, () => {
+        this.unwatchCollection = scope.$watchCollection(this.itemsExp, () => {
             var fragment = this.render(scope);
             dom.removeElementsBetween(header, footer);
             footer.parentNode.insertBefore(fragment, footer);
@@ -55,23 +57,65 @@ class RepeatDirective extends Directive {
         var self = this;
         var items = scope.$eval(this.itemsExp);
         var fragment = document.createDocumentFragment();
+        var newBuffer = new Map();
 
-        utils.forEach(items, function(item, key) {
-            var locals = {};
+        utils.forEach(items, function (item, key) {
+            var renderer = self.getRendererFromBuffer(self.buffer, item);
 
-            locals['$key'] = key;
-            locals['$index'] = key;
-            locals[self.itemExp] = item;
+            if (!renderer) {
+                var locals = {};
+                locals['$key'] = key;
+                locals['$index'] = key;
+                locals[self.itemExp] = item;
+                renderer = self.$render(self.itemTemplate, locals);
+            }
 
-            var itemContent = self.$renderer.render(self.itemTemplate, locals);
-
-            fragment.appendChild(itemContent);
+            self.setRendererToBuffer(newBuffer, item, renderer);
+            fragment.appendChild(renderer.view);
         });
+
+        this.buffer.entries(function (list) {
+            list.forEach(function (renderer) {
+                renderer.destroy();
+            });
+        });
+
+        this.buffer = newBuffer;
 
         return fragment;
     }
 
-    onDestroy() {
+    getRendererFromBuffer(buffer, dataItem) {
+        var renderer;
 
+        if (buffer.has(dataItem)) {
+            var list = buffer.get(dataItem);
+
+            if (list.length) {
+                renderer = list.shift();
+            } else {
+                buffer.delete(dataItem);
+            }
+        }
+
+        return renderer;
+    }
+
+    setRendererToBuffer(buffer, dataItem, renderer) {
+        var list;
+
+        if (buffer.has(dataItem)) {
+            list = buffer.get(dataItem);
+        } else {
+            list = [];
+            buffer.set(dataItem, list);
+        }
+
+        list.push(renderer);
+    }
+
+    onDestroy() {
+        this.buffer = null;
+        this.unwatchCollection && this.unwatchCollection();
     }
 }

@@ -1,5 +1,5 @@
 import { AstNode } from './ast-node';
-import { AST, NullExpressionNode } from './ast';
+import { AST } from './ast';
 
 export class MemberExpressionNode extends AstNode {
     constructor(object, property, computed) {

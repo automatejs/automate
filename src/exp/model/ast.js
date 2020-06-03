@@ -1,4 +1,5 @@
 export var AST = {};
+
 AST.Program = 'Program';
 AST.ExpressionStatement = 'ExpressionStatement';
 AST.AssignmentExpression = 'AssignmentExpression';

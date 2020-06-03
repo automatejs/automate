@@ -1,10 +1,13 @@
+import * as utils from '../utils';
+import { injector } from './injector';
 
-export function filterConstructor(metadata) {
-
+export function filterConstructor(data) {
+    this.$data = utils.merge(this.$$metadata, data);
+    injector.injectServices(this, this.$data);
 }
 
 export class Filter {
-    constructor(metadata) {
-        filterConstructor.call(this, metadata);
+    constructor(data) {
+        filterConstructor.call(this, data);
     }
 }

@@ -1,7 +1,9 @@
-
 export class Expression {
     constructor(text) {
         this.text = text;
+        this.program = null;
+        this.unwatch = null;
+        this.hasTranslation = false;
     }
 
     // get value
@@ -15,10 +17,12 @@ export class Expression {
     }
 
     watch(scope, handler, locals) {
-        return scope.$watch(this.text, handler, locals);
+        this.unwatch = scope.$watch(this.text, handler, locals);
     }
 
     destroy() {
-
+        if(this.unwatch != null) {
+            this.unwatch();
+        }
     }
 }
