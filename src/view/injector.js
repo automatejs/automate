@@ -259,7 +259,7 @@ export class Injector {
         if(checkLoopDependency) {
             // creating a service instance at the moment
             serviceFullName = utils.format('{0}.{1}', metadata.namespace, metadata.key);
-            hasLoopDependency = this.serviceStack.indexOf(serviceFullName) === -1;
+            hasLoopDependency = this.serviceStack.indexOf(serviceFullName) !== -1;
 
             this.serviceStack.push(serviceFullName);
 
