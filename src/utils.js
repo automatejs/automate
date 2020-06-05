@@ -1,48 +1,107 @@
-var debugMode = true,
-    toString = Object.prototype.toString,
+var toString = Object.prototype.toString,
     getPrototypeOf = Object.getPrototypeOf;
 
-function forEach(obj, action, ignoreOwn) {
-    if (isArray(obj)) {
-        for (var index = 0; index < obj.length; index++) {
-            if (action(obj[index], index)) {
-                return;
-            }
-        }
-    }
-    else if (isObject(obj)) {
-        for (var p in obj) {
-            if (ignoreOwn || obj.hasOwnProperty(p)) {
-                if (action(obj[p], p)) {
-                    return;
-                }
-            }
-        }
-    }
+// is
+function isUndefined(value) {
+    return typeof value === 'undefined';
 }
 
-function some(obj, action) {
-    if (isArray(obj)) {
-        for (var index = 0; index < obj.length; index++) {
-            if (action(index, obj[index])) {
-                return true;
-            }
-        }
-    }
-    else if (isObject(obj)) {
-        for (var p in obj) {
-            if (obj.hasOwnProperty(p)) {
-                if (action(p, obj[p])) {
-                    return true;
-                }
-            }
-        }
-    }
-    else {
-        return false;
-    }
+function isDefined(value) {
+    return typeof value !== 'undefined';
 }
 
+function isArray(value) {
+    return value instanceof Array;
+}
+
+function isMap(value) {
+    return value instanceof Map;
+}
+
+function isObject(value) {
+    return value !== null && typeof value === 'object';
+}
+
+function isBlankObject(value) {
+    return value !== null && typeof value === 'object' && !getPrototypeOf(value);
+}
+
+function isString(value) {
+    return typeof value === 'string';
+}
+
+function isNumber(value) {
+    return typeof value === 'number';
+}
+
+function isDate(value) {
+    return toString.call(value) === '[object Date]';
+}
+
+function isFunction(value) {
+    return typeof value === 'function';
+}
+
+function isRegExp(value) {
+    return toString.call(value) === '[object RegExp]';
+}
+
+function isBoolean(value) {
+    return typeof value === 'boolean';
+}
+
+function isFormData(value) {
+    return (typeof FormData !== 'undefined') && (value instanceof FormData);
+}
+// end of is
+
+// value
+function toNumber(value) {
+    var n = parseFloat(value);
+    return isNaN(n) ? value : n;
+}
+
+function lowercase(string) {
+    return isString(string) ? string.toLowerCase() : string;
+}
+
+function uppercase(string) {
+    return isString(string) ? string.toUpperCase() : string;
+}
+
+function convertToHumpName(name, separator) {
+    return name.split(separator).map(function (value, index) {
+        if (index === 0) {
+            return value;
+        }
+
+        if (value.length === 1) {
+            return value.toUpperCase();
+        }
+
+        return value.charAt(0).toUpperCase() + value.substring(1);
+    }).join('');
+}
+
+function convertFromHumpName(name, separator) {
+    var i = 0, newName = '', char;
+
+    while (i < name.length) {
+        char = name[i];
+
+        if (i !== 0 && /[A-Z]/.test(char)) {
+            newName += separator;
+            newName += char.toLowerCase();
+        } else {
+            newName += char;
+        }
+    }
+
+    return newName;
+}
+// end if value
+
+// object
 function copy() {
     var deep = false, objIndex = 0, obj = arguments[objIndex], filter;
 
@@ -142,6 +201,90 @@ function deepMerge(target, source) {
         }
     });
 }
+// end of object
+
+// iterator
+function forEach(target, action) {
+    if (isArray(target)) {
+        target.forEach(action);
+    } else if (isObject(target)) {
+        for (var key in target) {
+            if (target.hasOwnProperty(key)) {
+                action(target[key], key);
+            }
+        }
+    }
+}
+
+function some(target, func) {
+    if (isArray(target)) {
+        return target.some(func);
+    }
+
+    if (isObject(target)) {
+        for (var key in target) {
+            if (target.hasOwnProperty(key)) {
+                if (func(target[key], key)) {
+                    return true;
+                }
+            }
+        }
+    }
+}
+// end of iterator
+
+// array
+function orderBy(list, getter) {
+    var getValue = function (item) {
+        if (getter == null) {
+            return item;
+        }
+
+        return getter(item);
+    };
+
+    return list.sort(function (a, b) {
+        if (getValue(a) < getValue(b)) {
+            return -1;
+        }
+        if (getValue(a) > getValue(b)) {
+            return 1;
+        }
+        return 0;
+    });
+}
+
+function orderByDescending(list, getter) {
+    var getValue = function (item) {
+        if (getter == null) {
+            return item;
+        }
+
+        return getter(item);
+    };
+
+    return list.sort(function (a, b) {
+        if (getValue(a) < getValue(b)) {
+            return 1;
+        }
+        if (getValue(a) > getValue(b)) {
+            return -1;
+        }
+        return 0;
+    });
+}
+
+function concat() {
+    return Array.prototype.concat.apply([], arguments);
+}
+
+function remove(list, value) {
+    var index = list.indexOf(value);
+    if (index !== -1) {
+        return list.splice(index, 1);
+    }
+}
+// end of array
 
 function object(o) {
     function F() {
@@ -164,239 +307,51 @@ function inherit(subType, superType) {
     };
 }
 
-function lowercase(string) {
-    return isString(string) ? string.toLowerCase() : string;
-}
+function hasProperty(target, property) {
+    var key, keys = property.split('.');
 
-function uppercase(string) {
-    return isString(string) ? string.toUpperCase() : string;
-}
-
-function isUndefined(value) {
-    return typeof value === 'undefined';
-}
-
-function isDefined(value) {
-    return typeof value !== 'undefined';
-}
-
-function isArray(obj) {
-    return obj instanceof Array;
-}
-
-function isMap(obj) {
-    return obj instanceof Map;
-}
-
-function isObject(value) {
-    return value !== null && typeof value === 'object';
-}
-
-function isBlankObject(value) {
-    return value !== null && typeof value === 'object' && !getPrototypeOf(value);
-}
-
-function isString(value) {
-    return typeof value === 'string';
-}
-
-function isNumber(value) {
-    return typeof value === 'number';
-}
-
-function isDate(value) {
-    return toString.call(value) === '[object Date]';
-}
-
-function isFunction(value) {
-    return typeof value === 'function';
-}
-
-function isRegExp(value) {
-    return toString.call(value) === '[object RegExp]';
-}
-
-function isBoolean(value) {
-    return typeof value === 'boolean';
-}
-
-function isFormData(value) {
-    return (typeof FormData !== 'undefined') && (value instanceof FormData);
-}
-
-function isSame(obj1, obj2) {
-    var same = (obj1 === obj2);
-
-    if (!same) {
-        if (isArray(obj1) && isArray(obj2)) {
-            if (obj1.length === obj2.length) {
-                same = !some(obj1, function (index, value) {
-                    return !isSame(value, obj2[index]);
-                });
-            }
+    while (keys.length > 1) {
+        if (!isObject(target)) {
+            return false;
         }
-        else if (isObject(obj1) && isObject(obj2) && getPrototypeOf(obj1) === getPrototypeOf(obj2)) {
-            same = !some(obj1, function (key, value) {
-                return !isSame(value, obj2[key]);
-            });
-        }
+
+        key = keys.shift();
+        target = target[key];
     }
 
-    return same;
+    return isObject(target) && target.hasOwnProperty(keys.shift());
 }
 
-function isEmpty(value) {
-    return !isObject(value) || !some(value, function () {
-        return true;
-    });
-}
+function getProperty(target, property) {
+    var key, keys = property.split('.');
 
-function debug(log) {
-    if (debugMode) {
-        console.log(log);
-    }
-}
+    while (keys.length > 0) {
+        if(!isObject(target)) {
+            return;
+        }
 
-function contains(arr, obj) {
-    return arr.some(function (item) {
-        return item === obj;
-    });
-}
-
-function containsStr(arr, str, ignoreCase) {
-    return arr.some(function (item) {
-        return item === str || (ignoreCase && lowercase(item) === lowercase(str));
-    });
-}
-
-function hasProperty(obj, key, ignoreCase) {
-    if (!obj) {
-        return false;
+        key = keys.shift();
+        target = target[key];
     }
 
-    var key2, hasProp = true, keys = key.split('.'), target = obj;
+    return target;
+}
 
-    while (hasProp && keys.length > 0) {
-        key2 = keys.shift();
-        hasProp = false;
-        forEach(target, function (value3, key3) {
-            hasProp = (key3 === key2 || (ignoreCase && lowercase(key3) === lowercase(key2)));
-            if (hasProp) {
-                target = value3;
-            }
-            return hasProp;
-        }, true);
+function setProperty(target, property, value) {
+    var key, keys = property.split('.');
+
+    while (keys.length > 1) {
+        if (!isObject(target)) {
+            return;
+        }
+
+        key = keys.shift();
+        target = target[key];
     }
 
-    return hasProp;
-}
-
-function getProperty(obj, key, ignoreCase) {
-    if (!obj) {
-        return null;
-    }
-
-    var key2, hasProp = true, keys = key.split('.'), target = obj;
-
-    while (hasProp && keys.length > 0) {
-        key2 = keys.shift();
-        hasProp = false;
-        forEach(target, function (value3, key3) {
-            hasProp = (key3 === key2 || (ignoreCase && lowercase(key3) === lowercase(key2)));
-            if (hasProp) {
-                target = value3;
-            }
-            return hasProp;
-        }, true);
-    }
-
-    return hasProp ? target : null;
-}
-
-function setProperty(obj, key, value, ignoreCase) {
-    if (!obj) {
-        return;
-    }
-
-    var key2, hasProp = true, keys = key.split('.'), target = obj;
-
-    while (hasProp && keys.length > 0) {
-        key2 = keys.shift();
-        if (keys.length === 0) {
-            target[key2] = value;
-        }
-        else {
-            hasProp = false;
-            forEach(target, function (value3, key3) {
-                hasProp = (key3 === key2 || (ignoreCase && lowercase(key3) === lowercase(key2)));
-                if (hasProp) {
-                    target = value3;
-                }
-                return hasProp;
-            }, true);
-        }
-    }
-
-    if (!hasProp) {
-        throw new Error(key + ': Can not set property of undefined');
-    }
-}
-
-function concat() {
-    return Array.prototype.concat.apply([], arguments);
-}
-
-function orderBy(arr, getter) {
-    var getValue = function (item) {
-        if (getter == null) {
-            return item;
-        }
-
-        return getter(item);
-    };
-
-    return arr.sort(function (a, b) {
-        if (getValue(a) < getValue(b)) {
-            return -1;
-        }
-        if (getValue(a) > getValue(b)) {
-            return 1;
-        }
-        return 0;
-    });
-}
-
-function orderByDescending(arr, getter) {
-    var getValue = function (item) {
-        if (getter == null) {
-            return item;
-        }
-
-        return getter(item);
-    };
-
-    return arr.sort(function (a, b) {
-        if (getValue(a) < getValue(b)) {
-            return 1;
-        }
-        if (getValue(a) > getValue(b)) {
-            return -1;
-        }
-        return 0;
-    });
-}
-
-function toNumber(value) {
-    var n = parseFloat(value);
-    return isNaN(n) ? value : n;
-}
-
-function remove(arr, item) {
-    if (arr.length) {
-        var index = arr.indexOf(item);
-        if (index > -1) {
-            return arr.splice(index, 1);
-        }
+    if (isObject(target)) {
+        key = keys.shift();
+        target[key] = value;
     }
 }
 
@@ -429,30 +384,7 @@ function escapeHtml(html) {
     return html.replace(/&gt;/g, '>').replace(/&lt;/g, '<').replace(/&amp;/g, '&').replace(/&quote;/g, '');
 }
 
-function join(separator, arr) {
-    var result = '', length = arr.length;
-
-    arr.forEach(function (item, index) {
-        result += item;
-
-        if (index + 1 < length) {
-            result += separator;
-        }
-    });
-
-    return result;
-}
-
 export {
-    forEach,
-    some,
-    copy,
-    extend,
-    merge,
-    object,
-    inherit,
-    lowercase,
-    uppercase,
     isUndefined,
     isDefined,
     isObject,
@@ -464,21 +396,26 @@ export {
     isBoolean,
     isArray,
     isString,
-    isSame,
-    isEmpty,
     isFormData,
-    debug,
-    contains,
-    containsStr,
-    hasProperty,
-    getProperty,
-    setProperty,
+    toNumber,
+    lowercase,
+    uppercase,
+    convertToHumpName,
+    convertFromHumpName,
+    copy,
+    extend,
+    merge,
+    forEach,
+    some,
+    remove,
     concat,
     orderBy,
     orderByDescending,
-    toNumber,
-    remove,
+    object,
+    inherit,
+    hasProperty,
+    getProperty,
+    setProperty,
     format,
-    escapeHtml,
-    join
+    escapeHtml
 }

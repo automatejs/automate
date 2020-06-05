@@ -13,7 +13,7 @@ class RepeatDirective extends Directive {
         this.itemExp = '';
         this.itemsExp = '';
         this.itemTemplate = '';
-        this.buffer = new Map();
+        this.itemViews = new Map();
         this.unwatchCollection = null;
     }
 
@@ -57,51 +57,51 @@ class RepeatDirective extends Directive {
         var self = this;
         var items = scope.$eval(this.itemsExp);
         var fragment = document.createDocumentFragment();
-        var newBuffer = new Map();
+        var itemViews = new Map();
 
         utils.forEach(items, function (item, key) {
-            var renderer = self.getRendererFromBuffer(self.buffer, item);
+            var itemView = self.getViewFromBuffer(self.itemViews, item);
 
-            if (!renderer) {
+            if (!itemView) {
                 var locals = {};
                 locals['$key'] = key;
                 locals['$index'] = key;
                 locals[self.itemExp] = item;
-                renderer = self.$render(self.itemTemplate, locals);
+                itemView = self.$render(self.itemTemplate, locals);
             }
 
-            self.setRendererToBuffer(newBuffer, item, renderer);
-            fragment.appendChild(renderer.view);
+            self.setViewToBuffer(itemViews, item, itemView);
+            fragment.appendChild(itemView.content);
         });
 
-        this.buffer.forEach(function (list) {
-            list.forEach(function (renderer) {
-                renderer.destroy();
+        this.itemViews.forEach(function (list) {
+            list.forEach(function (view) {
+                view.destroy();
             });
         });
 
-        this.buffer = newBuffer;
+        this.itemViews = itemViews;
 
         return fragment;
     }
 
-    getRendererFromBuffer(buffer, dataItem) {
-        var renderer;
+    getViewFromBuffer(buffer, dataItem) {
+        var view;
 
         if (buffer.has(dataItem)) {
             var list = buffer.get(dataItem);
 
             if (list.length) {
-                renderer = list.shift();
+                view = list.shift();
             } else {
                 buffer.delete(dataItem);
             }
         }
 
-        return renderer;
+        return view;
     }
 
-    setRendererToBuffer(buffer, dataItem, renderer) {
+    setViewToBuffer(buffer, dataItem, view) {
         var list;
 
         if (buffer.has(dataItem)) {
@@ -111,11 +111,11 @@ class RepeatDirective extends Directive {
             buffer.set(dataItem, list);
         }
 
-        list.push(renderer);
+        list.push(view);
     }
 
     onDestroy() {
-        this.buffer = null;
+        this.itemViews.forEach((list) => list.forEach(view => view.destroy()));
         this.unwatchCollection && this.unwatchCollection();
     }
 }

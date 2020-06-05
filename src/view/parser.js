@@ -2,8 +2,22 @@ import { parseExp } from '../exp';
 import { parseTpl } from '../tpl';
 
 export class Parser {
-    constructor() {
+    get injector() {
+        return this.scope.$injector;
+    }
+
+    get nsAlias() {
+        return this.scope.$data.alias;
+    }
+
+    constructor(scope) {
+        this.scope = scope;
         this.programs = {};
+        this.type = {
+            components: {},
+            directives: {}
+        };
+        this.filters = {};
     }
 
     parseExpression(exp) {
@@ -21,7 +35,52 @@ export class Parser {
         return parseTpl(tpl);
     }
 
-    destroy() {
+    resolveComponent(name) {
+        var identifier, component,
+            buffer = this.type.components;
 
+        if (buffer[name] !== undefined) {
+            component = buffer[name];
+        } else {
+            identifier = this.injector.parseFullName(name, this.nsAlias);
+            component = this.injector.getComponent(identifier.key, identifier.ns);
+            buffer[name] = component;
+        }
+
+        return component;
+    }
+
+    resolveDirective(name) {
+        var identifier, directive,
+            buffer = this.type.directives;
+
+        if (buffer[name] !== undefined) {
+            directive = buffer[name];
+        } else {
+            identifier = this.injector.parseFullName(name, this.nsAlias);
+            directive = this.injector.getDirective(identifier.key, identifier.ns);
+            buffer[name] = directive;
+        }
+
+        return directive;
+    }
+
+    resolveFilter(name) {
+        var identifier, filter,
+            buffer = this.filters;
+
+        if (buffer[name] !== undefined) {
+            filter = buffer[name];
+        } else {
+            identifier = this.injector.parseFullName(name, this.nsAlias);
+            filter = this.injector.createFilter(identifier.key, identifier.ns);
+            buffer[name] = filter;
+        }
+
+        return filter;
+    }
+
+    destroy() {
+        this.scope = null;
     }
 }

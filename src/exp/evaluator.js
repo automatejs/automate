@@ -3,36 +3,33 @@ import { AST, NullExpressionNode } from './model';
 import { ExpBuilder } from './exp-builder';
 import { parseExp }  from './exp-api';
 
+var defaultOptions = {
+    allowNull: false,
+    assignInterceptor: null,
+    locals: null
+};
+
 export class Evaluator {
     constructor(scope, options) {
         this.scope = scope;
-        this.options = utils.merge({
-            allowNull: false,
-            assignInterceptor: null
-        }, options);
+        this.options = utils.merge(defaultOptions, options);
         this.program = null;
-        this.locals = null;
         this.builder = new ExpBuilder();
-        this.parser = scope.$parser ||  {
-            parseExpression: parseExp
-        };
+        this.parser = scope.$parser || {parseExpression: parseExp};
     }
 
     // get value from expression
-    evaluate(exp, locals) {
+    evaluate(exp) {
         var program = this.parser.parseExpression(exp);
-        return this.evaluateProgram(program, locals);
+        return this.evaluateProgram(program);
     }
 
-    evaluateProgram(program, locals) {
+    evaluateProgram(program) {
         var result;
 
         this.program = program;
-        this.locals = locals;
 
-        this.program.childNodes.forEach(child => {
-            result = this.evaluateNode(child);
-        });
+        this.program.childNodes.forEach(child => result = this.evaluateNode(child));
 
         if (result && result.$null) {
             result = null;
@@ -42,14 +39,13 @@ export class Evaluator {
     }
 
     // set value to expression
-    assign(exp, value, locals) {
+    assign(exp, value) {
         var program = this.parser.parseExpression(exp);
-        return this.assignProgram(program, value, locals);
+        return this.assignProgram(program, value);
     }
 
-    assignProgram(program, value, locals) {
+    assignProgram(program, value) {
         this.program = program;
-        this.locals = locals;
 
         if (this.program.childNodes.length !== 1) {
             throw new Error(utils.format('{0} is not a valid assignment', exp));
@@ -151,9 +147,7 @@ export class Evaluator {
     evaluateExpression(exp) {
         var result;
 
-        exp.childNodes.forEach(child => {
-            result = this.evaluateNode(child);
-        });
+        exp.childNodes.forEach(child => result = this.evaluateNode(child));
 
         return result;
     }
@@ -268,16 +262,14 @@ export class Evaluator {
     }
 
     evaluateCall(call) {
-        var argValues = call.args.map(arg => {
-            return this.evaluateNode(arg);
-        });
+        var argValues = call.args.map(arg => this.evaluateNode(arg));
 
         var context = this.evaluateNode(call.callee, {
             callee: true
         });
 
         if (call.filter) {
-            var filter = this.scope.$getFilter(context.prop);
+            var filter = this.parser.resolveFilter(context.prop);
 
             if(filter == null) {
                 throw new Error('Filter "' + context.prop + '" is not defined');
@@ -339,8 +331,8 @@ export class Evaluator {
 
         var result = target[identifier.name];
 
-        if (result == null && this.locals) {
-            result = this.locals[identifier.name];
+        if (result == null && this.options.locals) {
+            result = this.options.locals[identifier.name];
         }
 
         return result;

@@ -1,8 +1,8 @@
 import * as dom from '../dom';
 import * as utils from '../utils';
 import { M_HIDE_CLASS } from '../css';
-import { Renderer } from '../render';
 import { injector } from './injector';
+import { Renderer } from '../render';
 
 export function directiveConstructor(data) {
     this.$$scope = null;
@@ -22,6 +22,10 @@ export class Directive {
 
     get $scope() {
         return this.$$scope;
+    }
+
+    get $renderer() {
+        return this.$$scope.$renderer;
     }
 
     get $element() {
@@ -114,10 +118,6 @@ export class Directive {
     }
 
     $render(template, locals) {
-        var renderer = new Renderer(this.$scope, template, locals);
-
-        renderer.render();
-
-        return renderer;
+        return new Renderer(this.$scope, locals).render(template);
     }
 }

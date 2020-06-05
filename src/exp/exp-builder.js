@@ -109,11 +109,11 @@ export class ExpBuilder {
             res += ' | ' + fn;
 
             if (argValues.length > 0) {
-                res += ':' + utils.join(':', argValues);
+                res += ':' + argValues.join(':');
             }
         }
         else {
-            res = utils.format('{0}({1})', fn, utils.join(', ', argValues));
+            res = utils.format('{0}({1})', fn, argValues.join(', '));
         }
 
         return res;
@@ -157,7 +157,7 @@ export class ExpBuilder {
             return this.build(item);
         });
 
-        return utils.format('{{0}}', utils.join(', ', props));
+        return utils.format('{{0}}', props.join(', '));
     }
 
     buildArray(arr) {
@@ -165,6 +165,6 @@ export class ExpBuilder {
             return this.build(child);
         });
 
-        return utils.format('[{0}]', utils.join(',', items));
+        return utils.format('[{0}]', items.join(','));
     }
 }

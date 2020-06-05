@@ -10,11 +10,9 @@ export function componentConstructor(data) {
     this.$$velm = null;
     this.$$parent = null;
     this.$$children = [];
-    this.$$renderer = null;
-    this.$$observer = new Observer(this);
-    this.$injector = injector;
-    this.$parser = new Parser();
-    this.$evaluator = new Evaluator(this);
+    this.$$mainView = null;
+    this.$parser = new Parser(this);
+    this.$observer = new Observer(this);
     this.slots = {};
     this.events = {};
     this.props = this.$delegate({});
@@ -24,6 +22,10 @@ export function componentConstructor(data) {
 }
 
 export class Component {
+    get $injector() {
+        return injector;
+    }
+
     $delegate(target) {
         return new Proxy(target, handler);
     }
@@ -44,34 +46,28 @@ export class Component {
         componentConstructor.call(this, data);
     }
 
-    $getFilter(fullName) {
-        var identifier = this.$injector.parseFullName(fullName, this.$data.alias);
-        return this.$injector.createFilter(identifier.key, identifier.ns);
-    }
-
     $hasProperty(key) {
-        // return utils.hasProperty(this.props, key, true);
-        return this.$getProperty(key) !== undefined;
+        return utils.hasProperty(this.props, key);
     }
 
     $getProperty(key) {
-        return utils.getProperty(this.props, key, true);
+        return utils.getProperty(this.props, key);
     }
 
     $setProperty(key, value) {
-        var oldValue = utils.getProperty(this.props, key, true);
+        var oldValue = utils.getProperty(this.props, key);
 
         if (oldValue !== value) {
-            utils.setProperty(this.props, key, value, true);
+            utils.setProperty(this.props, key, value);
         }
     }
 
     $hasMessage(key) {
-        return utils.hasProperty(this.events, key, true);
+        return utils.hasProperty(this.events, key);
     }
 
     $bind(key, handler) {
-        var message = utils.getProperty(this.events, key, true);
+        var message = utils.getProperty(this.events, key);
 
         if (isMessage(message)) {
             message.on(handler);
@@ -81,7 +77,7 @@ export class Component {
     }
 
     $unbind(key, handler) {
-        var message = utils.getProperty(this.events, key, true);
+        var message = utils.getProperty(this.events, key);
 
         if (isMessage(message)) {
             message.off(handler);
@@ -89,19 +85,19 @@ export class Component {
     }
 
     $watch(exp, handler, locals) {
-        return this.$$observer.watch(exp, handler, locals);
+        return this.$observer.watch(exp, handler, locals);
     }
 
     $watchCollection(exp, handler, locals) {
-        return this.$$observer.watchCollection(exp, handler, locals);
+        return this.$observer.watchCollection(exp, handler, locals);
     }
 
     $eval(exp, locals) {
-        return this.$evaluator.evaluate(exp, locals);
+        return new Evaluator(this, {locals: locals}).evaluate(exp);
     }
 
     $assign(exp, value, locals) {
-        return this.$evaluator.assign(exp, value, locals);
+        return new Evaluator(this, {locals: locals}).assign(exp, value);
     }
 
     $getTemplate() {
@@ -124,26 +120,15 @@ export class Component {
 
     $render() {
         var template = this.$getTemplate();
-        this.$$renderer = new Renderer(this, template);
-        this.$$renderer.render();
-        return this.$$renderer;
+        this.$$mainView = new Renderer(this).render(template);
     }
 
     $mount(selectorOrElement) {
-        var element;
-
-        if (utils.isString(selectorOrElement)) {
-            element = document.querySelector(selectorOrElement);
-        }
-        else {
-            element = selectorOrElement;
-        }
-
-        if(this.$$renderer == null) {
+        if (this.$$mainView == null) {
             throw new Error('current component is not rendered');
+        } else {
+            this.$$mainView.mount(selectorOrElement);
         }
-
-        element.appendChild(this.$$renderer.view);
     }
 
     $unmount() {
@@ -165,10 +150,10 @@ export class Component {
     }
 
     $destroy() {
-        this.$$observer.destroy();
+        this.$observer.destroy();
 
-        if(this.$$renderer != null) {
-            this.$$renderer.destroy();
+        if(this.$$mainView != null) {
+            this.$$mainView.destroy();
         }
 
         this.onDestroy && this.onDestroy();

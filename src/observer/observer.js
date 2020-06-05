@@ -50,9 +50,6 @@ export class Observer {
         this.watcher = new Watcher();
         this.analyser = new Analyser(scope.$parser);
         this.delayer = new Delayer(this.notify, 16);
-        this.evaluator =  new Evaluator(this.scope, {
-            allowNull: true
-        });
     }
 
     createListener(exp, handler, value) {
@@ -99,8 +96,8 @@ export class Observer {
     watch(exp, handler, locals) {
         var self = this;
         var accessor = this.getAccessor(exp);
-        var evaluator =  this.evaluator;
-        var listener = this.createListener(exp, handler, evaluator.evaluate(exp, locals));
+        var evaluator =  new Evaluator(this.scope, { allowNull: true, locals: locals });
+        var listener = this.createListener(exp, handler, evaluator.evaluate(exp));
 
         function unwatchAccessors(accessors) {
             utils.forEach(accessors, function (item) {
@@ -121,7 +118,7 @@ export class Observer {
                 var values = target;
 
                 if (item.exp) {
-                    key = evaluator.evaluate(key, locals);
+                    key = evaluator.evaluate(key);
                 }
 
                 if(values === self.scope && locals && locals[key]) {
@@ -131,7 +128,7 @@ export class Observer {
                 item.unwatch = self.watcher.watch(values, key, function (args) {
                     unwatchAccessors(item.children);
                     watchAccessors(item.children, args.data.newValue);
-                    self.notifyChange(listener, evaluator.evaluate(exp, locals));
+                    self.notifyChange(listener, evaluator.evaluate(exp));
                 });
 
                 watchAccessors(item.children, values[key]);
@@ -148,7 +145,7 @@ export class Observer {
 
     watchCollection(exp, handler, locals) {
         var self = this,
-            evaluator =  this.evaluator;
+            evaluator = new Evaluator(this.scope, { allowNull: true, locals: locals });
         var unwatchProps = watchProps();
         var unwatchExp = this.watch(exp, () => {
             if (unwatchProps != null) {
@@ -157,10 +154,10 @@ export class Observer {
             unwatchProps = watchProps();
             handler.apply(this, arguments);
         }, locals);
-        var listener = this.createListener(exp, handler, evaluator.evaluate(exp, locals));
+        var listener = this.createListener(exp, handler, evaluator.evaluate(exp));
 
         function watchProps() {
-            var collection = evaluator.evaluate(exp, locals);
+            var collection = evaluator.evaluate(exp);
 
             if (utils.isObject(collection) || utils.isArray(collection)) {
                 return self.watcher.watch(collection, '*', function () {

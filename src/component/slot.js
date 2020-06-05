@@ -17,9 +17,7 @@ class SlotComponent extends Component {
         var template = slots[this.props.name];
 
         if (template) {
-            this.$$renderer = new Renderer(this.$$parent, template);
-            this.$$renderer.render();
-            return this.$$renderer;
+            this.$$mainView = new Renderer(this.$$parent).render(template);
         }
     }
 }

@@ -1,9 +1,10 @@
 import * as utils from '../utils';
 import * as dom from '../dom';
 import { isVText, isVComment, isVElm } from '../tpl';
-import { Local, events } from '../core';
+import { Local } from '../core';
 import { Binding } from './binding';
 import { M_CMP_CLASS } from '../css';
+import { View } from './view';
 
 // Window Events
 // case 'on-load':
@@ -37,37 +38,16 @@ export class Renderer {
         return this.scope.$injector;
     }
 
-    get nsAlias() {
-        return this.scope.$data.alias;
-    }
-
-    get view() {
-        var view = document.createDocumentFragment();
-        this.elms.forEach(elm => view.appendChild(elm));
-        return view;
-    }
-
-    constructor(scope, template, locals) {
+    constructor(scope, locals) {
         this.scope = scope;
-        this.template = template;
         this.locals = locals;
-        this.elms = [];
-        this.vnodes = [];
-        this.type = {
-            components: {},
-            directives: {}
-        };
-        this.entity = {
-            bindings: [],
-            components: [],
-            directives: []
-        };
         this.parser = scope.$parser;
+        this.view = null;
     }
 
     newBinding(text) {
         var binding = new Binding(this.scope, text, this.locals);
-        this.entity.bindings.push(binding);
+        this.view.bindings.push(binding);
         return binding;
     }
 
@@ -75,7 +55,7 @@ export class Renderer {
         var child = this.injector.createComponent(cls);
 
         this.scope.$appendChild(child);
-        this.entity.components.push(child);
+        this.view.components.push(child);
 
         return child;
     }
@@ -89,17 +69,7 @@ export class Renderer {
     }
 
     recognizeComponent(velm) {
-        var identifier, component,
-            name = velm.nodeName,
-            buffer = this.type.components;
-
-        if (buffer[name] !== undefined) {
-            component = buffer[name];
-        } else {
-            identifier = this.injector.parseFullName(name, this.nsAlias);
-            component = this.injector.getComponent(identifier.key, identifier.ns);
-            buffer[name] = component;
-        }
+        var component = this.parser.resolveComponent(velm.nodeName);
 
         // velm.nodeData.identifier = identifier;
 
@@ -107,61 +77,34 @@ export class Renderer {
     }
 
     recognizeDirective(vattr) {
-        var identifier, directive,
-            name = vattr.nodeData.name,
-            buffer = this.type.directives;
-
-        if(buffer[name] !== undefined) {
-            directive = buffer[name];
-        }
-        else {
-            identifier = this.injector.parseFullName(name, this.nsAlias);
-            directive = this.injector.getDirective(identifier.key, identifier.ns);
-            buffer[name] = directive;
-        }
+        var directive = this.parser.resolveDirective(vattr.nodeData.name);
 
         // vattr.nodeData.identifier = identifier;
 
         return directive;
     }
 
-    bindTranslateChanged() {
-        var bindings = this.entity.bindings;
-
-        if(!bindings.length) {
-            return;
-        }
-
-        // update text while translate changed
-        this.unbindTranslateChanged = events.translateChanged.on(() => {
-            bindings.forEach(binding => {
-                binding.detect();
-                binding.patch();
-            });
-        });
-    }
-
-    render() {
+    render(template) {
         // must set a root element for directive life cycle "afterLink" hoops
-        var view = document.createDocumentFragment();
+        var container = document.createDocumentFragment();
 
-        this.vnodes = this.parser.parseTemplate(this.template);
+        this.view = new View();
 
-        this.compileNodes(this.vnodes);
+        this.view.vnodes = this.parser.parseTemplate(template);
+
+        this.compileNodes(this.view.vnodes);
 
         // this.entity.directives.forEach(directive => directive.$prelink());
 
-        this.linkNodes(this.vnodes).forEach(elm => view.appendChild(elm));
+        this.linkNodes(this.view.vnodes).forEach(node => container.appendChild(node));
 
         // call directive life cycle hoops
-        this.entity.directives.forEach(directive => directive.$postlink());
+        this.view.directives.forEach(directive => directive.$postlink());
 
         // cache the generated elements
-        dom.getChildrenOfElement(view).forEach(elm => this.elms.push(elm));
+        dom.getChildrenOfElement(container).forEach(node => this.view.nodes.push(node));
 
-        this.bindTranslateChanged();
-
-        return view;
+        return this.view;
     }
 
     compileNodes(vnodes) {
@@ -217,7 +160,7 @@ export class Renderer {
         });
 
         // sort directive according to its priority
-        utils.orderBy(directives, directive => directive.$priority).forEach(directive => this.entity.directives.push(directive));
+        utils.orderBy(directives, directive => directive.$priority).forEach(directive => this.view.directives.push(directive));
 
         elmData.directives = directives;
 
@@ -246,7 +189,7 @@ export class Renderer {
         if (attrName.startsWith('@')) {
             attrData.isEvent = true;
             attrData.name = attrName.substr(1);
-            attrData.isDomEvent = utils.contains(domEvents, attrData.name);
+            attrData.isDomEvent = utils.some(domEvents, e => e === attrData.name);
             binding && (binding.logical = true);
         }
         else if (attrName.startsWith(':')) {
@@ -302,9 +245,10 @@ export class Renderer {
             if (vattr.velm.nodeData.component) {
                 binding.registerAutomation(function (value) {
                     var component = vattr.velm.nodeData.component;
+                    var propertyName = utils.convertToHumpName(attrData.name, '-');
 
-                    if (component.$hasProperty(attrData.name)) {
-                        component.$setProperty(attrData.name, value);
+                    if (component.$hasProperty(propertyName)) {
+                        component.$setProperty(propertyName, value);
                     }
                     else {
                         setHtmlAttr(value);
@@ -397,7 +341,8 @@ export class Renderer {
                 elm.addEventListener(attrData.name, e => binding.compute(new Local(e, elm)));
             }
             else if (velm.nodeData.component) {
-                velm.nodeData.component.$bind(attrData.name, e => binding.compute(new Local(e, elm)));
+                var eventName = utils.convertToHumpName(attrData.name, '-');
+                velm.nodeData.component.$bind(eventName, e => binding.compute(new Local(e, elm)));
             }
         }
         else {
@@ -435,18 +380,5 @@ export class Renderer {
         });
 
         return  slots;
-    }
-
-    destroy() {
-        this.unbindTranslateChanged();
-        this.entity.components.forEach(item => item.$destroy());
-        this.entity.directives.forEach(item => item.$destroy());
-        this.entity.bindings.forEach(item => item.destroy());
-        this.vnodes.forEach(item => item.destroy());
-
-        this.entity.components.length = 0;
-        this.entity.directives.length = 0;
-        this.entity.bindings.length = 0;
-        this.vnodes.length = 0;
     }
 }
