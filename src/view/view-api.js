@@ -9,18 +9,22 @@ import { Service } from './service';
 function namespace(name) {
     return {
         component: function (key, config, metadata) {
+            metadata = metadata || {};
             metadata.namespace = name;
             return component(key, config, metadata);
         },
         directive: function (key, config, metadata) {
+            metadata = metadata || {};
             metadata.namespace = name;
             return directive(key, config, metadata);
         },
         service: function (key, config, metadata) {
+            metadata = metadata || {};
             metadata.namespace = name;
             return service(key, config, metadata);
         },
         filter: function (key, config, metadata) {
+            metadata = metadata || {};
             metadata.namespace = name;
             return filter(key, config, metadata);
         }
@@ -73,7 +77,7 @@ function render(selector, config) {
         template: element.innerHTML
     });
     var root = new Root();
-    
+
     dom.clearChildrenOfElement(element);
     root.$render();
     root.$mount(element);

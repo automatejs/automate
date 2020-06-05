@@ -10,9 +10,9 @@ var handler = {
 };
 
 // extends object prototype, add function toProxy
-Object.prototype.toProxy = function () {
-    return isProxy(this) ? this : new Proxy(this, handler);
-};
+// Object.prototype.toProxy = function () {
+//     return isProxy(this) ? this : new Proxy(this, handler);
+// };
 
 function isProxy(proxy) {
     return utils.isObject(proxy) && proxy[isProxySymbol];
