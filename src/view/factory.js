@@ -46,12 +46,7 @@ export class Factory {
 
     rename(roleId, name) {
         if (pattern.test(name)) {
-            var newName = '';
-            var segments = name.split('-');
-
-            segments.forEach(function (segment) {
-                newName += utils.uppercase(segment[0]) + segment.substring(1);
-            });
+            var newName = utils.convertToHumpName(name, '-', true);
 
             switch (roleId) {
                 case roles.component:

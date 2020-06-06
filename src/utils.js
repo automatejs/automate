@@ -69,9 +69,9 @@ function uppercase(string) {
     return isString(string) ? string.toUpperCase() : string;
 }
 
-function convertToHumpName(name, separator) {
+function convertToHumpName(name, separator, uppercaseFirstLetter) {
     return name.split(separator).map(function (value, index) {
-        if (index === 0) {
+        if (index === 0 && !uppercaseFirstLetter) {
             return value;
         }
 
@@ -83,13 +83,13 @@ function convertToHumpName(name, separator) {
     }).join('');
 }
 
-function convertFromHumpName(name, separator) {
+function convertFromHumpName(name, separator, uppercaseFirstLetter) {
     var i = 0, newName = '', char;
 
     while (i < name.length) {
         char = name[i];
 
-        if (i !== 0 && /[A-Z]/.test(char)) {
+        if ((i !== 0 || uppercaseFirstLetter) && /[A-Z]/.test(char)) {
             newName += separator;
             newName += char.toLowerCase();
         } else {
