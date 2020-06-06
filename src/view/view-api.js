@@ -1,32 +1,31 @@
+import * as dom from '../dom';
+import * as utils from '../utils';
 import { factory } from './factory';
 import { injector } from './injector';
-import * as dom from '../dom';
 import { Component } from './component';
 import { Directive } from './directive';
 import { Filter } from './filter';
 import { Service } from './service';
 
 function namespace(name) {
+    function mergeMetadata(metadata) {
+        return utils.merge({
+            namespace:name
+        }, metadata);
+    }
+
     return {
         component: function (key, config, metadata) {
-            metadata = metadata || {};
-            metadata.namespace = name;
-            return component(key, config, metadata);
+            return component(key, config, mergeMetadata(metadata));
         },
         directive: function (key, config, metadata) {
-            metadata = metadata || {};
-            metadata.namespace = name;
-            return directive(key, config, metadata);
+            return directive(key, config, mergeMetadata(metadata));
         },
         service: function (key, config, metadata) {
-            metadata = metadata || {};
-            metadata.namespace = name;
-            return service(key, config, metadata);
+            return service(key, config, mergeMetadata(metadata));
         },
         filter: function (key, config, metadata) {
-            metadata = metadata || {};
-            metadata.namespace = name;
-            return filter(key, config, metadata);
+            return filter(key, config, mergeMetadata(metadata));
         }
     };
 }

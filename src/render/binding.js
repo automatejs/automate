@@ -130,11 +130,6 @@ export class Binding {
         }
     }
 
-    evaluate(exp, locals) {
-        locals = utils.merge(this.locals, locals);
-        return this.scope.$eval(exp, locals);
-    }
-
     destroy() {
         this.expressions.forEach(exp => {
             exp.destroy();

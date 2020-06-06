@@ -11,7 +11,7 @@ class StyleOddDirective extends StyleDirective {
     }
 
     skipCurrentElm() {
-        var index = this.$binding.evaluate('$index');
+        var index = this.$eval('$index');
         return index & 1 === 0;
     }
 }

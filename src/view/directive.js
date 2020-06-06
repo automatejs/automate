@@ -62,7 +62,7 @@ export class Directive {
     $postlink() {
         this.afterLink && this.afterLink();
 
-        if(this.$binding != null) {
+        if (this.$binding != null) {
             this.$change(this.$binding.value, this.$binding.oldValue);
         }
     }
@@ -80,7 +80,7 @@ export class Directive {
         var result = velm.nodeData.directives.filter(item => {
             return item.$key === key;
         });
-        return result.length? result[0]: null;
+        return result.length ? result[0] : null;
     }
 
     $seekDirective(key) {
@@ -94,7 +94,7 @@ export class Directive {
     }
 
     $removeElement(yes) {
-        if(this.$placeholder == null) {
+        if (this.$placeholder == null) {
             throw new Error('you must define element placeholder!');
         }
 
@@ -115,6 +115,16 @@ export class Directive {
         } else {
             dom.removeClass(this.$element, M_HIDE_CLASS);
         }
+    }
+
+    $eval(exp, locals) {
+        locals = utils.merge(this.$binding.locals, locals);
+        return this.$scope.$eval(exp, locals);
+    }
+
+    $assign(exp, value, locals) {
+        locals = utils.merge(this.$binding.locals, locals);
+        return this.$scope.$assign(exp, value);
     }
 
     $render(template, locals) {
