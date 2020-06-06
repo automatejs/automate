@@ -49,6 +49,8 @@ this.setProps({
 <input type="text" value="{{ state.text }}" />
 <!--bind sub attribute value, such as bind style-->
 <div :style.width="state.css.width" :style.height="state.css.height" :style.background-color="state.css.background"></div>
+<!-- component property name with more than 2 words, separate name with '-', such as pass vale to longName property -->
+<test-cmp :long-name="value"></test-cmp>
 ```
 
 # bind event
