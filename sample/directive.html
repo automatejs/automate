@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Directive</title>
+</head>
+
+<body>
+    <div id="app">
+        <div *show-component-key></div>
+    </div>
+    <script src="../dist//automate.js"></script>
+    <script>
+        automate.namespace('sample').directive('show-component-key', {
+            afterLink: function () {
+                this.$element.style.border = "1px solid #cccccc";
+                this.$element.innerHTML = "Name: <b>" + this.$scope.$$metadata.key + "</b>";
+                this.$element.style.backgroundColor = "#ff00ff";
+            }
+        });
+
+        automate.render('#app');
+    </script>
+</body>
+
+</html>

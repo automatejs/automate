@@ -275,7 +275,7 @@ export class Evaluator {
                 throw new Error('Filter "' + context.prop + '" is not defined');
             }
 
-            return filter.execute.apply(filter, argValues);
+            return filter.transform.apply(filter, argValues);
         }
         else {
             var fn = context.obj[context.prop];

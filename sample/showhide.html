@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>show and hide element</title>
+</head>
+<body>
+    <div id="app">
+        <div *m-show="state.visible">shown content</div>
+        <div *m-hide="state.visible">hidden content</div>
+        <button @click="toggle()">toggle</button>
+    </div>
+
+    <script src="../dist//automate.js"></script>
+
+    <script>
+        automate.render('#app', {
+            construct: function () {
+                this.state.visible = false;
+            },
+            toggle: function () {
+                this.state.visible = !this.state.visible;
+            }
+        });
+    </script>
+</body>
+</html>

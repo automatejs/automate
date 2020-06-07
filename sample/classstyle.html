@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>style</title>
+
+    <style type="text/css">
+    .error {
+        color: red;
+    }
+
+    .warning {
+        color: yellow;
+    }
+    </style>
+</head>
+<body>
+<div id="app">
+    <div *m-style="state.css" *m-class="state.cls">content</div>
+    <button @click="change()">change</button>
+</div>
+<script src="../dist//automate.js"></script>
+<script>
+    automate.render('#app', {
+        construct: function () {
+            this.state.css = {
+                'background-color': 'blue'
+            };
+            this.state.cls = ['error'];
+        },
+        change: function () {
+            this.state.css = {
+                'background-color': 'white'
+            };
+            this.state.cls = ['warning'];
+        }
+    });
+</script>
+</body>
+</html>

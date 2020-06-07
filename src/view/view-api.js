@@ -10,7 +10,7 @@ import { Service } from './service';
 function namespace(name) {
     function mergeMetadata(metadata) {
         return utils.merge({
-            namespace:name
+            namespace: name
         }, metadata);
     }
 
@@ -70,11 +70,11 @@ function isService(instance) {
     return instance instanceof Service;
 }
 
-function render(selector, config) {
+function render(selector, config, metadata) {
     var element = document.querySelector(selector);
-    var Root = factory.makeComponent('root', config, {
+    var Root = factory.makeComponent('root', config, utils.merge({
         template: element.innerHTML
-    });
+    }, metadata));
     var root = new Root();
 
     dom.clearChildrenOfElement(element);
