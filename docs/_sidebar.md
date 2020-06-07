@@ -9,7 +9,7 @@
   * [Template syntax](template.md)
 
 * [Namespace](namespace.md)
-* 
+
 * [Component](component.md)
 
 * [Directive](directive.md)
@@ -22,6 +22,6 @@
 
 * [Reactivity](reactivity.md)
 
-* API
+* [API](api.md)
 
 * [Guide](guide.md)

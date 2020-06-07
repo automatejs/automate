@@ -1,20 +1,26 @@
 # Guide
 
-# Todo
+# Http client
 
-## Translation
+The axios http client library is recommended to work with automate.js
+
+[axios](https://github.com/axios/axios)
+
+# Animation
+
+The lightweight animmation engine animejs is recommended to work with automate.js
+
+[animejs](https://animejs.com/)
+
+# Translation
 
 provide localization feature inside automate.js 
 
-## Rounter
+# Rounter
 
 A front-end router base on automate.js
 
-## Animation
-
-Create a animation framework base on automate.js
-
-## ui library
+# UI library
 
 Build common ui components base on bootstrap css framework and automate.js, only depends on css files, remove all dependcy to js files
 
