@@ -19,7 +19,7 @@
     <script src="../dist//automate.js"></script>
 
     <script>
-        automate.render('#app', {
+        automate.namespace('sample').render('#app', {
             construct: function () {
                 this.state.items = [];
                 this.makeItems(1000);

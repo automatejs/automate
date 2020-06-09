@@ -25,7 +25,7 @@
 </div>
 <script src="../dist//automate.js"></script>
 <script>
-    automate.render('#app', {
+    automate.namespace('sample').render('#app', {
         construct: function () {
             this.state.value = 1;
         },

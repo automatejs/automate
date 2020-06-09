@@ -15,7 +15,7 @@
 </div>
 <script src="../dist//automate.js"></script>
 <script>
-    automate.namespace('sample').service('my-service', {
+    automate.namespace('sample').service('myService', {
         construct: function() {
             this.data = [1,2,3];
         },
@@ -24,13 +24,13 @@
         }
     });
 
-    automate.render('#app', {
+    automate.namespace('sample').render('#app', {
         construct: function() {
             this.data = this.myService.getData();
         }
     }, {
         inject: {
-            myService: 'my-service'
+            myService: 'myService'
         }
     });
 </script>

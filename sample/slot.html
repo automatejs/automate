@@ -30,7 +30,7 @@
 
 <script src="../dist//automate.js"></script>
 <script>
-    automate.namespace('sample').component('test-slot', {
+    automate.namespace('sample').component('testSlot', {
        construct: function () {
 
        }
@@ -38,7 +38,7 @@
         templateId: 'test-slot'
     });
 
-    automate.render('#app');
+    automate.namespace('sample').render('#app');
 </script>
 </body>
 
