@@ -4,7 +4,7 @@ import * as utils from '../../utils';
 
 @directive({
     namespace: 'automate',
-    key: 'm-style'
+    key: 'style'
 })
 export class StyleDirective extends Directive {
     constructor() {

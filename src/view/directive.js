@@ -20,6 +20,10 @@ export class Directive {
         return this.$$metadata.key;
     }
 
+    get $namespace() {
+        return this.$$metadata.namespace;
+    }
+
     get $scope() {
         return this.$$scope;
     }
@@ -76,45 +80,50 @@ export class Directive {
         this.onDestroy && this.onDestroy();
     }
 
-    $$searchDirective(velm, key) {
-        var result = velm.nodeData.directives.filter(item => {
-            return item.$key === key;
-        });
+    $$searchDirective(velm, key, namespace) {
+        if(!namespace){
+            namespace = this.$namespace;
+        }
+
+        var result = velm.nodeData.directives.filter(item => item.$key === key && item.$namespace === namespace);
+
         return result.length ? result[0] : null;
     }
 
-    $seekDirective(key) {
+    $seekDirective(key, namespace) {
         var velm = this.$$vattr.velm;
-        return this.$$searchDirective(velm, key);
+        return this.$$searchDirective(velm, key, namespace);
     }
 
-    $seekUpDirective(key) {
+    $seekUpDirective(key, namespace) {
         var velm = this.$$vattr.velm.parentNode;
-        return this.$$searchDirective(velm, key);
+        return this.$$searchDirective(velm, key, namespace);
     }
 
-    $removeElement(yes) {
-        if (this.$placeholder == null) {
-            throw new Error('you must define element placeholder!');
-        }
-
-        if (yes) {
-            if (this.$element.parentNode != null) {
-                dom.replaceElement(this.$element, this.$placeholder);
+    $removeElement() {
+        if (this.$element.parentNode != null) {
+            if (this.$placeholder == null) {
+                throw new Error('you must define element placeholder!');
             }
-        } else {
-            if (this.$element.parentNode == null) {
-                dom.replaceElement(this.$placeholder, this.$element);
-            }
+            dom.replaceElement(this.$element, this.$placeholder);
         }
     }
 
-    $hideElement(yes) {
-        if (yes) {
-            dom.addClass(this.$element, M_HIDE_CLASS);
-        } else {
-            dom.removeClass(this.$element, M_HIDE_CLASS);
+    $appendElement() {
+        if (this.$element.parentNode == null) {
+            if (this.$placeholder == null) {
+                throw new Error('you must define element placeholder!');
+            }
+            dom.replaceElement(this.$placeholder, this.$element);
         }
+    }
+
+    $hideElement() {
+        dom.addClass(this.$element, M_HIDE_CLASS);
+    }
+
+    $showElement() {
+        dom.removeClass(this.$element, M_HIDE_CLASS);
     }
 
     $eval(exp, locals) {

@@ -1,4 +1,5 @@
 import * as utils from '../utils';
+import * as dom from '../dom';
 import { isMessage } from '../core';
 import { Parser } from './parser';
 import { Observer, handler } from '../observer';
@@ -13,11 +14,12 @@ export function componentConstructor(data) {
     this.$$mainView = null;
     this.$parser = new Parser(this);
     this.$observer = new Observer(this);
+    this.$data = utils.merge(this.$$metadata, data);
+    this.$container = document.createElement(utils.convertFromHumpName(this.$data.key, '-'));
     this.slots = {};
     this.events = {};
     this.props = this.$delegate({});
     this.state = this.$delegate({});
-    this.$data = utils.merge(this.$$metadata, data);
     injector.injectServices(this, this.$data);
 }
 
@@ -32,6 +34,10 @@ export class Component {
 
     $setSlot(slots) {
         this.slots = slots || {};
+    }
+
+    $serContainer(elm) {
+        this.$container = elm;
     }
 
     $setState(state) {
@@ -59,6 +65,7 @@ export class Component {
 
         if (oldValue !== value) {
             utils.setProperty(this.props, key, value);
+            this.onPropertyChanged && this.onPropertyChanged(key, value, oldValue);
         }
     }
 
@@ -120,19 +127,27 @@ export class Component {
 
     $render() {
         var template = this.$getTemplate();
-        this.$$mainView = new Renderer(this).render(template);
+
+        this.$$mainView = new Renderer(this).render(template, this.$container);
+
+        return this.$$mainView;
     }
 
     $mount(selectorOrElement) {
-        if (this.$$mainView == null) {
-            throw new Error('current component is not rendered');
-        } else {
-            this.$$mainView.mount(selectorOrElement);
+        var element;
+
+        if (utils.isString(selectorOrElement)) {
+            element = document.querySelector(selectorOrElement);
         }
+        else {
+            element = selectorOrElement;
+        }
+
+        element.appendChild(this.$container);
     }
 
     $unmount() {
-
+        dom.removeElement(this.$container);
     }
 
     $appendChild(child) {
@@ -150,6 +165,8 @@ export class Component {
     }
 
     $destroy() {
+        this.$unmount();
+
         this.$observer.destroy();
 
         if(this.$$mainView != null) {

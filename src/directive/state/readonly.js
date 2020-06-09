@@ -3,7 +3,7 @@ import { directive } from '../../decorator';
 
 @directive({
     namespace: 'automate',
-    key: 'm-readonly'
+    key: 'readonly'
 })
 class ReadonlyDirective extends StateDirective {
     constructor() {

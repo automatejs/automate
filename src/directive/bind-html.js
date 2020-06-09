@@ -3,7 +3,7 @@ import { directive } from '../decorator';
 
 @directive({
     namespace: 'automate',
-    key: 'm-bind-html'
+    key: 'bindHtml'
 })
 class BindHtmlDirective extends Directive {
     constructor() {

@@ -4,7 +4,7 @@ import { Message } from '../../core';
 
 @directive({
     namespace: 'automate',
-    key: 'm-switch-when'
+    key: 'switchWhen'
 })
 class SwitchWhenDirective extends Directive {
     constructor() {
@@ -13,11 +13,11 @@ class SwitchWhenDirective extends Directive {
         this.matched = false;
         this.switchCtrl = null;
         this.changed = new Message();
-        this.$placeholder = document.createComment('m-switch-when');
+        this.$placeholder = document.createComment('switch-when');
     }
 
     afterLink() {
-        this.switchCtrl = this.$seekUpDirective('m-switch');
+        this.switchCtrl = this.$seekUpDirective('switch');
 
         if (this.switchCtrl == null) {
             throw new Error('Require m-switch directive');
@@ -46,6 +46,6 @@ class SwitchWhenDirective extends Directive {
             }
         }
 
-        this.$removeElement(!matched);
+        this[matched ? '$appendElement' : '$removeElement']();
     }
 }

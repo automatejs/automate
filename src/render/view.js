@@ -1,14 +1,7 @@
 import * as utils from '../utils';
 
-export class View {
-    get content() {
-        var content = document.createDocumentFragment();
-        this.nodes.forEach(node => content.appendChild(node));
-        return content;
-    }
-
+class View {
     constructor() {
-        this.nodes = [];
         this.vnodes = [];
         this.bindings = [];
         this.directives = [];
@@ -45,6 +38,8 @@ export class View {
     // }
 
     destroy() {
+        this.onDestroy && this.onDestroy();
+
         this.components.forEach(item => item.$destroy());
         this.directives.forEach(item => item.$destroy());
         this.bindings.forEach(item => item.destroy());
@@ -54,6 +49,33 @@ export class View {
         this.directives.length = 0;
         this.bindings.length = 0;
         this.vnodes.length = 0;
+    }
+}
+
+export class SingleNodeView extends View {
+    get content() {
+        return this.node;
+    }
+
+    constructor() {
+        super();
+        this.node = null;
+    }
+}
+
+export class MultipleNodeView extends View {
+    get content() {
+        var content = document.createDocumentFragment();
+        this.nodes.forEach(node => content.appendChild(node));
+        return content;
+    }
+
+    constructor() {
+        super();
+        this.nodes = [];
+    }
+
+    onDestroy() {
         this.nodes.length = 0;
     }
 }

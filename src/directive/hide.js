@@ -3,7 +3,7 @@ import { directive } from '../decorator';
 
 @directive({
     namespace: 'automate',
-    key: 'm-hide'
+    key: 'hide'
 })
 class HideDirective extends Directive {
     constructor() {
@@ -11,6 +11,6 @@ class HideDirective extends Directive {
     }
 
     onChange(value) {
-        this.$hideElement(value);
+        this[value ? '$hideElement' : '$showElement']();
     }
 }

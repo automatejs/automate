@@ -6,7 +6,7 @@ import { Directive, directiveConstructor } from './directive';
 import { Filter, filterConstructor } from './filter';
 import { Service, serviceConstructor } from './service';
 
-var pattern = /^[a-z_\$][\w\$-]*/i;
+var namePattern = /^[a-z][a-zA-Z0-9]*$/;
 
 // start make constructor function because class can't be call without new.
 var componentClass = (function () {
@@ -45,8 +45,12 @@ export class Factory {
     }
 
     rename(roleId, name) {
-        if (pattern.test(name)) {
-            var newName = utils.convertToHumpName(name, '-', true);
+        if (namePattern.test(name)) {
+            var newName = utils.uppercase(name[0]);
+
+            if (name.length > 0) {
+                newName += name.substr(1);
+            }
 
             switch (roleId) {
                 case roles.component:

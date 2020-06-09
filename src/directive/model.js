@@ -3,7 +3,7 @@ import { directive } from '../decorator';
 
 @directive({
     namespace: 'automate',
-    key: 'm-model'
+    key: 'model'
 })
 class ModelDirective extends Directive {
     constructor() {

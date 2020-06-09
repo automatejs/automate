@@ -3,7 +3,7 @@ import { directive } from '../../decorator';
 
 @directive({
     namespace: 'automate',
-    key: 'm-style-odd'
+    key: 'styleOdd'
 })
 class StyleOddDirective extends StyleDirective {
     constructor() {

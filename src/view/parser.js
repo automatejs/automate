@@ -1,3 +1,4 @@
+import * as utils from '../utils';
 import { parseExp } from '../exp';
 import { parseTpl } from '../tpl';
 
@@ -35,31 +36,33 @@ export class Parser {
         return parseTpl(tpl);
     }
 
-    resolveComponent(name) {
-        var identifier, component,
+    resolveComponent(selector) {
+        var identifier, component, fullName,
             buffer = this.type.components;
 
-        if (buffer[name] !== undefined) {
-            component = buffer[name];
+        if (buffer[selector] !== undefined) {
+            component = buffer[selector];
         } else {
-            identifier = this.injector.parseFullName(name, this.nsAlias);
-            component = this.injector.getComponent(identifier.key, identifier.ns);
-            buffer[name] = component;
+            fullName = utils.convertToHumpName(selector, '-');
+            identifier = this.injector.parseFullName(fullName, this.nsAlias);
+            component = this.injector.getComponent(identifier.key, identifier.ns || this.scope.$data.namespace);
+            buffer[selector] = component;
         }
 
         return component;
     }
 
-    resolveDirective(name) {
-        var identifier, directive,
+    resolveDirective(selector) {
+        var identifier, directive, fullName,
             buffer = this.type.directives;
 
-        if (buffer[name] !== undefined) {
-            directive = buffer[name];
+        if (buffer[selector] !== undefined) {
+            directive = buffer[selector];
         } else {
-            identifier = this.injector.parseFullName(name, this.nsAlias);
-            directive = this.injector.getDirective(identifier.key, identifier.ns);
-            buffer[name] = directive;
+            fullName = utils.convertToHumpName(selector, '-');
+            identifier = this.injector.parseFullName(fullName, this.nsAlias);
+            directive = this.injector.getDirective(identifier.key, identifier.ns || this.scope.$data.namespace);
+            buffer[selector] = directive;
         }
 
         return directive;
@@ -73,7 +76,7 @@ export class Parser {
             filter = buffer[name];
         } else {
             identifier = this.injector.parseFullName(name, this.nsAlias);
-            filter = this.injector.createFilter(identifier.key, identifier.ns);
+            filter = this.injector.createFilter(identifier.key, identifier.ns || this.scope.$data.namespace);
             buffer[name] = filter;
         }
 

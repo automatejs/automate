@@ -3,7 +3,7 @@ import { directive } from '../../decorator';
 
 @directive({
     namespace: 'automate',
-    selector: 'm-selected'
+    key: 'selected'
 })
 class SelectedDirective extends StateDirective {
     constructor() {

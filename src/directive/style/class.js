@@ -4,7 +4,7 @@ import * as dom from '../../dom';
 
 @directive({
     namespace: 'automate',
-    key: 'm-class'
+    key: 'class'
 })
 export class ClassDirective extends Directive {
     constructor() {

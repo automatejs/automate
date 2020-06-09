@@ -1,13 +1,13 @@
 import * as utils from '../utils';
 import { roles } from './roles';
 
-// metadata example
-// { key: '', namespace: '', extends: null, construct: fn, methods: {} }
-export class Injector {
+var keyPattern = /^[a-z][a-zA-Z0-9]*$/;
+var globalNamespace ='automate';
+
+class NamespaceContainer {
     constructor() {
         this.classContainer = {};
         this.instanceContainer = {};
-        this.serviceStack = [];
     }
 
     getClassContainer(roleId) {
@@ -23,123 +23,101 @@ export class Injector {
         }
         return this.instanceContainer[roleId];
     }
+}
+
+// metadata example
+// { key: '', namespace: '', extends: null, construct: fn, methods: {} }
+export class Injector {
+    constructor() {
+        this.nsContainer = {};
+        this.serviceStack = [];
+    }
+
+    getNamespaceContainer(namespace) {
+        if (utils.isString(namespace)) {
+            namespace = utils.lowercase(namespace);
+
+            if (!this.nsContainer[namespace]) {
+                this.nsContainer[namespace] = new NamespaceContainer();
+            }
+
+            return this.nsContainer[namespace];
+        }
+        else {
+            throw new Error('namespace is required');
+        }
+    }
+
+    checkKeyName(key) {
+        if (!keyPattern.test(key)) {
+            throw new Error(key + ' is not a valid name');
+        }
+    }
 
     register(roleId, key, constructor) {
-        if (key.indexOf('.') !== -1) {
-            throw new Error('Illegal character "."');
+        this.checkKeyName(key);
+
+        var namespace = constructor.prototype.$$metadata.namespace;
+        var namespaceContainer = this.getNamespaceContainer(namespace);
+        var classContainer = namespaceContainer.getClassContainer(roleId);
+
+        if (namespace === globalNamespace && roleId === roles.directive) {
+            key = utils.format('m{0}', utils.uppercase(key[0]) + (key.length > 1 ? key.substr(1) : ''));
         }
 
-        var container = this.getClassContainer(roleId);
-
-        if (container[key] == null) {
-            container[key] = [];
-        }
-        else {
-            var matches = container[key].filter(function (item) {
-                return item.prototype.$$metadata.namespace === constructor.prototype.$$metadata.namespace;
-            });
-
-            if (matches.length > 0) {
-                throw new Error(key + ' is exist under namespace ' + matches[0].prototype.$$metadata.namespace);
-            }
+        if (classContainer[key]) {
+            throw new Error(key + ' is exist under namespace ' + namespace);
         }
 
-        container[key].push(constructor);
+        classContainer[key] = constructor;
     }
 
-    registerComponent(key, constructor, metadata) {
-        this.register(roles.component, key, constructor, metadata);
+    registerComponent(key, constructor) {
+        this.register(roles.component, key, constructor);
     }
 
-    registerDirective(key, constructor, metadata) {
-        this.register(roles.directive, key, constructor, metadata);
+    registerDirective(key, constructor) {
+        this.register(roles.directive, key, constructor);
     }
 
-    registerFilter(key, constructor, metadata) {
-        this.register(roles.filter, key, constructor, metadata);
+    registerFilter(key, constructor) {
+        this.register(roles.filter, key, constructor);
     }
 
-    registerService(key, constructor, metadata) {
-        this.register(roles.service, key, constructor, metadata);
+    registerService(key, constructor) {
+        this.register(roles.service, key, constructor);
     }
 
-    has(roleId, key, ignoreCase, namespace) {
-        var constructors, container = this.getClassContainer(roleId);
-
-        if (ignoreCase) {
-            constructors = utils.getProperty(container, key, true);
-        }
-        else {
-            constructors = container[key];
-        }
-
-        if (constructors == null) {
-            return false;
-        }
-
-        if (namespace && constructors.length > 0) {
-            constructors = constructors.filter(function (item) {
-                var meta = item.prototype.$$metadata;
-                return meta.namespace && utils.lowercase(meta.namespace) === utils.lowercase(namespace);
-            });
-
-            if (constructors.length === 0) {
-                return false;
-            }
-        }
-
-        return true;
+    has(roleId, key, namespace) {
+        return this.get(roleId, key, namespace) != null;
     }
 
     hasComponent(key, namespace) {
-        return this.has(roles.component, key, true, namespace);
+        return this.has(roles.component, key, namespace);
     }
 
     hasDirective(key, namespace) {
-        return this.has(roles.directive, key, true, namespace);
+        return this.has(roles.directive, key, namespace);
     }
 
     hasFilter(key, namespace) {
-        return this.has(roles.filter, key, true, namespace);
+        return this.has(roles.filter, key, namespace);
     }
 
     hasService(key, namespace) {
-        return this.has(roles.service, key, true, namespace);
+        return this.has(roles.service, key, namespace);
     }
 
-    get(roleId, key, ignoreCase, namespace) {
-        var constructors, container = this.getClassContainer(roleId);
+    getFromGlobalNamespace(roleId, key) {
+        var namespaceContainer = this.getNamespaceContainer(globalNamespace);
+        var classContainer = namespaceContainer.getClassContainer(roleId);
+        return classContainer[key];
+    }
 
-        if (ignoreCase) {
-            constructors = utils.getProperty(container, key, true);
-        }
-        else {
-            constructors = container[key];
-        }
-
-        if (constructors == null) {
-            return null;
-        }
-
-        if (namespace && constructors.length > 0) {
-            constructors = constructors.filter(function (item) {
-                var meta = item.prototype.$$metadata;
-                return meta.namespace && utils.lowercase(meta.namespace) === utils.lowercase(namespace);
-            });
-
-            if (constructors.length === 0) {
-                return null;
-            }
-        }
-
-        if (constructors.length > 1) {
-            var namespaces = constructors.map(function (item) {
-                return item.prototype.$$metadata.namespace;
-            });
-            throw new Error('namespace ' + namespaces.join('|') + ' all have ' + key);
-        }
-
-        return constructors[0];
+    get(roleId, key, namespace) {
+        var namespaceContainer = this.getNamespaceContainer(namespace);
+        var classContainer = namespaceContainer.getClassContainer(roleId);
+        return classContainer[key] || this.getFromGlobalNamespace(roleId, key);
     }
 
     getComponent(key, namespace) {
@@ -165,7 +143,7 @@ export class Injector {
             constructor = this.get(roleId, keyOrConstructor, namespace);
 
             if (constructor == null) {
-                throw new Error('miss constructor for key ' + keyOrConstructor);
+                throw new Error(utils.format('can not find "{0}" in namespace "{1}"', keyOrConstructor, namespace));
             }
         } else if (utils.isFunction(keyOrConstructor)) {
             constructor = keyOrConstructor;
@@ -185,10 +163,16 @@ export class Injector {
     }
 
     createFilter(keyOrConstructor, namespace) {
-        var instance, container = this.getInstanceContainer(roles.filter);
+        var instance, namespaceContainer = this.getNamespaceContainer(namespace),
+            container = namespaceContainer.getInstanceContainer(roles.filter), key;
 
         if (utils.isString(keyOrConstructor)) {
+            key = keyOrConstructor;
             keyOrConstructor = this.getFilter(keyOrConstructor, namespace);
+
+            if (keyOrConstructor == null) {
+                throw new Error(utils.format('namespace "{0}" has no filter "{1}"', namespace, key));
+            }
         }
 
         var result = container.filter(function (item) {
@@ -206,10 +190,16 @@ export class Injector {
     }
 
     createService(keyOrConstructor, namespace) {
-        var instance, container = this.getInstanceContainer(roles.service);
+        var instance, namespaceContainer = this.getNamespaceContainer(namespace),
+            container = namespaceContainer.getInstanceContainer(roles.service), key;
 
         if (utils.isString(keyOrConstructor)) {
+            key = keyOrConstructor;
             keyOrConstructor = this.getService(keyOrConstructor, namespace);
+
+            if (keyOrConstructor == null) {
+                throw new Error(utils.format('namespace "{0}" has no service "{1}"', namespace, key));
+            }
         }
 
         if (!keyOrConstructor.prototype.$$metadata.nonShared) {
@@ -241,7 +231,7 @@ export class Injector {
             result.ns = segments.join('.');
 
             if (alias) {
-                utils.some(alias, function (shortName, fullName) {
+                utils.some(alias, function (fullName, shortName) {
                     if (shortName === result.ns) {
                         result.ns = fullName;
                         return true;
@@ -258,7 +248,7 @@ export class Injector {
 
         if(checkLoopDependency) {
             // creating a service instance at the moment
-            serviceFullName = utils.format('{0}.{1}', metadata.namespace, metadata.key);
+            serviceFullName = utils.format('{0}.{1}', utils.lowercase(metadata.namespace), metadata.key);
             hasLoopDependency = this.serviceStack.indexOf(serviceFullName) !== -1;
 
             this.serviceStack.push(serviceFullName);
@@ -282,7 +272,7 @@ export class Injector {
                         if (instance[privateKey] == null) {
                             if (utils.isString(service)) {
                                 var identifier = self.parseFullName(service, metadata.alias);
-                                instance[privateKey] = self.createService(identifier.key, identifier.ns);
+                                instance[privateKey] = self.createService(identifier.key, identifier.ns || metadata.namespace);
                             } else {
                                 instance[privateKey] = self.createService(service);
                             }

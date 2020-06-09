@@ -4,7 +4,7 @@ import { Message } from '../../core';
 
 @directive({
     namespace: 'automate',
-    key: 'm-switch'
+    key: 'switch'
 })
 class SwitchDirective extends Directive {
     constructor() {

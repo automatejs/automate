@@ -26,6 +26,17 @@ function namespace(name) {
         },
         filter: function (key, config, metadata) {
             return filter(key, config, mergeMetadata(metadata));
+        },
+        render: function (selector, config, metadata) {
+            var element = document.querySelector(selector);
+            var Root = factory.makeComponent('automateApp', config, utils.merge({
+                namespace: name,
+                template: element.innerHTML
+            }, metadata));
+            var root = new Root();
+
+            dom.clearChildrenOfElement(element);
+            root.$render().mount(element);
         }
     };
 }
@@ -70,18 +81,6 @@ function isService(instance) {
     return instance instanceof Service;
 }
 
-function render(selector, config, metadata) {
-    var element = document.querySelector(selector);
-    var Root = factory.makeComponent('root', config, utils.merge({
-        template: element.innerHTML
-    }, metadata));
-    var root = new Root();
-
-    dom.clearChildrenOfElement(element);
-    root.$render();
-    root.$mount(element);
-}
-
 export {
     Component,
     Directive,
@@ -92,6 +91,5 @@ export {
     isFilter,
     isService,
     namespace,
-    render,
     injector
 };

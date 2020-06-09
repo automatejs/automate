@@ -5,7 +5,7 @@ import * as dom from '../dom';
 
 @directive({
     namespace: 'automate',
-    key: 'm-repeat'
+    key: 'repeat'
 })
 class RepeatDirective extends Directive {
     constructor() {

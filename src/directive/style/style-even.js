@@ -3,7 +3,7 @@ import { directive } from '../../decorator';
 
 @directive({
     namespace: 'automate',
-    key: 'm-style-even'
+    key: 'styleEven'
 })
 class StyleEvenDirective extends StyleDirective {
     constructor() {

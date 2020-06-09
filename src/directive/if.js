@@ -3,7 +3,7 @@ import { directive } from '../decorator';
 
 @directive({
     namespace: 'automate',
-    key: 'm-if'
+    key: 'if'
 })
 class IfDirective extends Directive {
     constructor() {
@@ -12,6 +12,6 @@ class IfDirective extends Directive {
     }
 
     onChange(value) {
-        this.$removeElement(!value);
+        this[value ? '$appendElement' : '$removeElement']();
     }
 }

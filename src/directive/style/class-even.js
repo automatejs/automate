@@ -3,7 +3,7 @@ import { directive } from '../../decorator';
 
 @directive({
     namespace: 'automate',
-    key: 'm-class-even'
+    key: 'classEven'
 })
 class ClassEvenDirective extends ClassDirective {
     constructor() {

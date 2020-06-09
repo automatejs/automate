@@ -10,8 +10,4 @@ export class Filter {
     constructor(data) {
         filterConstructor.call(this, data);
     }
-
-    transform() {
-        return this.onTransform && this.onTransform.apply(this, arguments);
-    }
 }

@@ -95,6 +95,8 @@ function convertFromHumpName(name, separator, uppercaseFirstLetter) {
         } else {
             newName += char;
         }
+
+        i++;
     }
 
     return newName;

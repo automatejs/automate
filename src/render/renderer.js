@@ -4,7 +4,7 @@ import { isVText, isVComment, isVElm } from '../tpl';
 import { Local } from '../core';
 import { Binding } from './binding';
 import { M_CMP_CLASS } from '../css';
-import { View } from './view';
+import { SingleNodeView, MultipleNodeView } from './view';
 
 // Window Events
 // case 'on-load':
@@ -84,11 +84,17 @@ export class Renderer {
         return directive;
     }
 
-    render(template) {
-        // must set a root element for directive life cycle "afterLink" hoops
-        var container = document.createDocumentFragment();
+    render(template, container) {
+        var hasContainer = container != null;
 
-        this.view = new View();
+        if(hasContainer) {
+            this.view = new SingleNodeView();
+        }
+        else {
+            // must set a root element for directive life cycle "afterLink" hoops
+            container = document.createDocumentFragment();
+            this.view = new MultipleNodeView();
+        }
 
         this.view.vnodes = this.parser.parseTemplate(template);
 
@@ -101,8 +107,13 @@ export class Renderer {
         // call directive life cycle hoops
         this.view.directives.forEach(directive => directive.$postlink());
 
-        // cache the generated elements
-        dom.getChildrenOfElement(container).forEach(node => this.view.nodes.push(node));
+        if(hasContainer) {
+            this.view.node = container;
+        }
+        else {
+            // cache the generated elements
+            dom.getChildrenOfElement(container).forEach(node => this.view.nodes.push(node));
+        }
 
         return this.view;
     }
@@ -314,9 +325,9 @@ export class Renderer {
             velm.vattrs.forEach(vattr => this.linkAttr(vattr));
 
             instance.$$velm = velm;
+            instance.$serContainer(velm.elm);
             instance.$setSlot(elmData.slots);
             instance.$render();
-            instance.$mount(velm.elm);
         }
         else {
             velm.vattrs.forEach(vattr => this.linkAttr(vattr));
