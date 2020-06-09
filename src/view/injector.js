@@ -2,7 +2,7 @@ import * as utils from '../utils';
 import { roles } from './roles';
 
 var keyPattern = /^[a-z][a-zA-Z0-9]*$/;
-var globalNamespace ='automate';
+var globalNamespace = 'automate';
 
 class NamespaceContainer {
     constructor() {
@@ -155,7 +155,7 @@ export class Injector {
     }
 
     createComponent(keyOrConstructor, namespace) {
-       return this.create(roles.component, keyOrConstructor, namespace);
+        return this.create(roles.component, keyOrConstructor, namespace);
     }
 
     createDirective(keyOrConstructor, namespace) {
@@ -163,8 +163,7 @@ export class Injector {
     }
 
     createFilter(keyOrConstructor, namespace) {
-        var instance, namespaceContainer = this.getNamespaceContainer(namespace),
-            container = namespaceContainer.getInstanceContainer(roles.filter), key;
+        var instance, key;
 
         if (utils.isString(keyOrConstructor)) {
             key = keyOrConstructor;
@@ -175,9 +174,15 @@ export class Injector {
             }
         }
 
-        var result = container.filter(function (item) {
-            return item instanceof keyOrConstructor;
-        });
+        if (!namespace) {
+            namespace = keyOrConstructor.prototype.$$metadata.namespace;
+        }
+
+        var namespaceContainer = this.getNamespaceContainer(namespace),
+            container = namespaceContainer.getInstanceContainer(roles.filter),
+            result = container.filter(function (item) {
+                return item instanceof keyOrConstructor;
+            });
 
         if (result.length) {
             instance = result[0];
@@ -190,8 +195,7 @@ export class Injector {
     }
 
     createService(keyOrConstructor, namespace) {
-        var instance, namespaceContainer = this.getNamespaceContainer(namespace),
-            container = namespaceContainer.getInstanceContainer(roles.service), key;
+        var instance, key;
 
         if (utils.isString(keyOrConstructor)) {
             key = keyOrConstructor;
@@ -202,10 +206,16 @@ export class Injector {
             }
         }
 
+        if (!namespace) {
+            namespace = keyOrConstructor.prototype.$$metadata.namespace;
+        }
+
         if (!keyOrConstructor.prototype.$$metadata.nonShared) {
-            var result = container.filter(function (item) {
-                return item instanceof keyOrConstructor;
-            });
+            var namespaceContainer = this.getNamespaceContainer(namespace),
+                container = namespaceContainer.getInstanceContainer(roles.service),
+                result = container.filter(function (item) {
+                    return item instanceof keyOrConstructor;
+                });
 
             if (result.length) {
                 instance = result[0];
@@ -221,7 +231,7 @@ export class Injector {
     }
 
     parseFullName(name, alias) {
-        var result = {ns: '', key: ''},
+        var result = { ns: '', key: '' },
             segments = name.split('.');
 
         if (segments.length === 1) {
@@ -246,7 +256,7 @@ export class Injector {
     injectServices(instance, metadata, checkLoopDependency) {
         var self = this, serviceFullName, hasLoopDependency = false;
 
-        if(checkLoopDependency) {
+        if (checkLoopDependency) {
             // creating a service instance at the moment
             serviceFullName = utils.format('{0}.{1}', utils.lowercase(metadata.namespace), metadata.key);
             hasLoopDependency = this.serviceStack.indexOf(serviceFullName) !== -1;
@@ -284,7 +294,7 @@ export class Injector {
             });
         }
 
-        if(checkLoopDependency) {
+        if (checkLoopDependency) {
             this.serviceStack.pop();
         }
     }
