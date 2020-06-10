@@ -7,8 +7,8 @@ export class Parser {
         return this.scope.$injector;
     }
 
-    get nsAlias() {
-        return this.scope.$data.alias;
+    get using() {
+        return this.scope.$data.using;
     }
 
     constructor(scope) {
@@ -16,7 +16,8 @@ export class Parser {
         this.programs = {};
         this.type = {
             components: {},
-            directives: {}
+            directives: {},
+            filters: {}
         };
         this.filters = {};
     }
@@ -36,48 +37,43 @@ export class Parser {
         return parseTpl(tpl);
     }
 
-    resolveComponent(selector) {
-        var identifier, component, fullName,
-            buffer = this.type.components;
+    resolve(selector, buffer, loader) {
+        var identifier, target, fullName, defaultNs = this.scope.$data.namespace;
 
         if (buffer[selector] !== undefined) {
-            component = buffer[selector];
+            target = buffer[selector];
         } else {
             fullName = utils.convertToHumpName(selector, '-');
-            identifier = this.injector.parseFullName(fullName, this.nsAlias);
-            component = this.injector.getComponent(identifier.key, identifier.ns || this.scope.$data.namespace);
-            buffer[selector] = component;
+            identifier = this.injector.parseFullName(fullName, this.using);
+
+            if (identifier.cls) {
+                buffer[selector] = identifier.cls;
+            } else {
+                target = this.injector[loader](identifier.key, identifier.ns || defaultNs);
+                buffer[selector] = target;
+            }
         }
 
-        return component;
+        return target;
+    }
+
+    resolveComponent(selector) {
+        return this.resolve(selector, this.type.components, 'getComponent');
     }
 
     resolveDirective(selector) {
-        var identifier, directive, fullName,
-            buffer = this.type.directives;
-
-        if (buffer[selector] !== undefined) {
-            directive = buffer[selector];
-        } else {
-            fullName = utils.convertToHumpName(selector, '-');
-            identifier = this.injector.parseFullName(fullName, this.nsAlias);
-            directive = this.injector.getDirective(identifier.key, identifier.ns || this.scope.$data.namespace);
-            buffer[selector] = directive;
-        }
-
-        return directive;
+        return this.resolve(selector, this.type.directives, 'getDirective');
     }
 
-    resolveFilter(name) {
-        var identifier, filter,
-            buffer = this.filters;
+    resolveFilter(selector) {
+        var filter, filterCls, buffer = this.filters;
 
-        if (buffer[name] !== undefined) {
-            filter = buffer[name];
+        if (buffer[selector] !== undefined) {
+            filter = buffer[selector];
         } else {
-            identifier = this.injector.parseFullName(name, this.nsAlias);
-            filter = this.injector.createFilter(identifier.key, identifier.ns || this.scope.$data.namespace);
-            buffer[name] = filter;
+            filterCls = this.resolve(selector, this.type.filters, 'getFilter');
+            filter = this.injector.createFilter(filterCls);
+            buffer[selector] = filter;
         }
 
         return filter;
