@@ -5,7 +5,7 @@ Directives are used to extend functionality of html by custom attributes to prov
 # Create
 
 ```
-automate.namespace('sample').directive('show-component-key', {
+automate.namespace('sample').directive('showComponentKey', {
     afterLink: function () {
         this.$element.style.border = "1px solid #cccccc";
         this.$element.innerHTML = "Name: <b>" + this.$scope.$$metadata.key + "</b>";
@@ -40,7 +40,7 @@ automate.namespace('sample').directive('show-component-key', {
     </div>
     <script src="../dist//automate.js"></script>
     <script>
-        automate.namespace('sample').directive('show-component-key', {
+        automate.namespace('sample').directive('showComponentKey', {
             afterLink: function () {
                 this.$element.style.border = "1px solid #cccccc";
                 this.$element.innerHTML = "Name: <b>" + this.$scope.$$metadata.key + "</b>";
@@ -48,7 +48,7 @@ automate.namespace('sample').directive('show-component-key', {
             }
         });
 
-        automate.render('#app');
+        automate.namespace('sample').render('#app');
     </script>
 </body>
 

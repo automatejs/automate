@@ -31,7 +31,7 @@ automate is designed for modern browser, it uses ES6 ___Proxy___ object to detec
     <script src="../dist//automate.js"></script>
 
     <script>
-        automate.render('#app', {
+        automate.namespace('sample').render('#app', {
             construct: function () {
                 this.state.todo = '';
                 this.state.items = [];

@@ -80,11 +80,11 @@ By default, the evaluation logic is the same as JavaScript engine, access proper
 
 # Namespace
 
-> syntax ___[package].[name]___
+> syntax ___[namespace].[key]___
 
-If two package has component with same name, you can identify them with namespace
+If two namespace has component with same name, you can identify them with namespace
 
 ```
-<!-- add package name before key name -->
+<!-- add namespace before key name -->
 <sample.test-cmp *m-bind="content"></sample.test-cmp>
 ```

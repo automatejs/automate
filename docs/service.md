@@ -5,7 +5,7 @@ Service is a singleton that can be wired with components, directives, filters or
 # Create
 
 ```
- automate.namespace('sample').service('my-service', {
+ automate.namespace('sample').service('myService', {
         construct: function() {
             this.data = [1,2,3];
         },
@@ -22,7 +22,7 @@ you can inject services via ___inject___ metadata configuration
 ```
 {
     inject: {
-        myService: 'my-service'
+        myService: 'myService'
     }
 }
 ```
@@ -49,7 +49,7 @@ you can inject services via ___inject___ metadata configuration
 </div>
 <script src="../dist//automate.js"></script>
 <script>
-    automate.namespace('sample').service('my-service', {
+    automate.namespace('sample').service('myService', {
         construct: function() {
             this.data = [1,2,3];
         },
@@ -58,13 +58,13 @@ you can inject services via ___inject___ metadata configuration
         }
     });
 
-    automate.render('#app', {
+    automate.namespace('sample').render('#app', {
         construct: function() {
             this.data = this.myService.getData();
         }
     }, {
         inject: {
-            myService: 'my-service'
+            myService: 'myService'
         }
     });
 </script>

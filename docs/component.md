@@ -9,8 +9,8 @@ while definding a component, you can define published properties and events to c
 # Define component
 
 ```
-<!-- define a web component with name "test-cmp" -->
-automate.namespace('sample').component('test-cmp', {
+<!-- define a web component with name "testCmp" -->
+automate.namespace('sample').component('testCmp', {
     construct: function () {
        // component contructor
        // define propertys here
@@ -30,8 +30,8 @@ automate.namespace('sample').component('test-cmp', {
     <div>it is a web component</div>
 </template>
 
-<!-- define a web component with name "test-cmp" -->
-automate.namespace('sample').component('test-cmp', {
+<!-- define a web component with name "testCmp" -->
+automate.namespace('sample').component('testCmp', {
     construct: function () {
        
     }
@@ -57,7 +57,7 @@ automate.namespace('sample').component('test-cmp', {
 </template>
 
 <!-- publish property -->
-automate.namespace('sample').component('test-cmp', {
+automate.namespace('sample').component('testCmp', {
     construct: function () {
         this.props.name = '';
     }
@@ -84,7 +84,7 @@ automate.namespace('sample').component('test-cmp', {
 </template>
 
 <!-- publish event -->
-automate.namespace('sample').component('test-cmp', {
+automate.namespace('sample').component('testCmp', {
     construct: function () {
         this.props.name = '';
         this.events.renamed = new automate.Message();
@@ -169,7 +169,7 @@ automate.namespace('sample').component('test-cmp', {
     <script src="../dist/automate.js"></script>
 
     <script>
-        automate.namespace('sample').component('test-cmp', {
+        automate.namespace('sample').component('testCmp', {
             construct: function () {
                 this.props.name = '';
                 this.events.renamed = new automate.Message();
@@ -184,7 +184,7 @@ automate.namespace('sample').component('test-cmp', {
             templateId: 'test-cmp'
         });
 
-        automate.render('#app', {
+        automate.namespace('sample').render('#app', {
             construct: function () {
                 this.state.name = 'test component';
             },
@@ -208,9 +208,9 @@ component template string
 
 html template element id value
 
-## alias
+## using
 
-alias object define short name for package name
+using components from other namespace 
 
 ## inject
 

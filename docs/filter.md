@@ -6,7 +6,7 @@ Filter is a singleton used to transform value pass to the template, it helps in 
 
 ```
 automate.namespace('sample').filter('removeNull', {
-    onTransform: function (list) {
+    transform: function (list) {
         for (var i = list.length - 1; i >= 0; i--) {
             if (typeof list[i] === 'undefined' ||
                 list[i] === null) {
@@ -53,7 +53,7 @@ automate.namespace('sample').filter('removeNull', {
     <script src="../dist//automate.js"></script>
     <script>
         automate.namespace('sample').filter('removeNull', {
-            onTransform: function (list) {
+            transform: function (list) {
                 for (var i = list.length - 1; i >= 0; i--) {
                     if (typeof list[i] === 'undefined' ||
                         list[i] === null) {
@@ -64,7 +64,7 @@ automate.namespace('sample').filter('removeNull', {
             }
         });
 
-        automate.render('#app', {
+        automate.namespace('sample').render('#app', {
             construct: function () {
                 this.data = [1, 2, 3, null, 5];
             }
@@ -77,6 +77,6 @@ automate.namespace('sample').filter('removeNull', {
 
 # Lyfecycle Hoops
 
-## onTransform
+## transform
 
 Called when filter is applied, transform target value pass to the template
