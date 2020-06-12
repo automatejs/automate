@@ -193,11 +193,8 @@ export class Injector {
 
     createSingleton(roleId, keyOrConstructor, namespace) {
         var instance,
-            Cls = this.resolveConstructor(roleId, keyOrConstructor, namespace);
-
-        if(!namespace) {
+            Cls = this.resolveConstructor(roleId, keyOrConstructor, namespace),
             namespace = Cls.prototype.$$metadata.namespace;
-        }
 
         var namespaceContainer = this.getNamespaceContainer(namespace),
             container = namespaceContainer.getInstanceContainer(roleId),
@@ -232,10 +229,10 @@ export class Injector {
         var Service = this.resolveConstructor(roles.service, keyOrConstructor, namespace);
 
         if (Service.prototype.$$metadata.nonShared) {
-            return this.create(roles.service, Service, namespace);
+            return this.create(roles.service);
         }
 
-        return this.createSingleton(roles.service, Service, namespace);
+        return this.createSingleton(roles.service, Service);
     }
 
     extractNsAndKey(name) {

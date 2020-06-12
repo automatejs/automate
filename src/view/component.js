@@ -130,6 +130,8 @@ export class Component {
 
         this.$$mainView = new Renderer(this).render(template, this.$container);
 
+        this.afterViewRendered && this.afterViewRendered();
+
         return this.$$mainView;
     }
 
