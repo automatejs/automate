@@ -1,5 +1,6 @@
 import * as utils from '../utils';
 import * as dom from '../dom';
+import { M_CMP_CLASS } from '../css';
 import { isMessage } from '../core';
 import { Parser } from './parser';
 import { Observer, handler } from '../observer';
@@ -15,7 +16,7 @@ export function componentConstructor(data) {
     this.$parser = new Parser(this);
     this.$observer = new Observer(this);
     this.$data = utils.merge(this.$$metadata, data);
-    this.$container = document.createElement(utils.convertFromHumpName(this.$data.key, '-'));
+    this.$container = this.$makeContainer();
     this.slots = {};
     this.events = {};
     this.props = this.$delegate({});
@@ -50,6 +51,12 @@ export class Component {
 
     constructor(data) {
         componentConstructor.call(this, data);
+    }
+
+    $makeContainer() {
+        var elm = document.createElement(utils.convertFromHumpName(this.$data.key, '-'));
+        dom.addClass(elm, M_CMP_CLASS);
+        return elm;
     }
 
     $hasProperty(key) {
