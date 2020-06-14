@@ -37,14 +37,14 @@ export class Parser {
         return parseTpl(tpl);
     }
 
-    resolve(selector, buffer, loader) {
+    resolve(selector, buffer, parser) {
         var target, fullName, defaultNs = this.scope.$data.namespace;
 
         if (buffer[selector] !== undefined) {
             target = buffer[selector];
         } else {
             fullName = utils.convertToHumpName(selector, '-');
-            target = this.injector.parseComponent(fullName, this.using, defaultNs);
+            target = this.injector[parser](fullName, this.using, defaultNs);
             buffer[selector] = target;
         }
 
@@ -52,11 +52,11 @@ export class Parser {
     }
 
     resolveComponent(selector) {
-        return this.resolve(selector, this.type.components, 'getComponent');
+        return this.resolve(selector, this.type.components, 'parseComponent');
     }
 
     resolveDirective(selector) {
-        return this.resolve(selector, this.type.directives, 'getDirective');
+        return this.resolve(selector, this.type.directives, 'parseDirective');
     }
 
     resolveFilter(selector) {
@@ -65,7 +65,7 @@ export class Parser {
         if (buffer[selector] !== undefined) {
             filter = buffer[selector];
         } else {
-            filterCls = this.resolve(selector, this.type.filters, 'getFilter');
+            filterCls = this.resolve(selector, this.type.filters, 'parseFilter');
             filter = this.injector.createFilter(filterCls);
             buffer[selector] = filter;
         }
