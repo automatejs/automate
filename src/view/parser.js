@@ -38,20 +38,14 @@ export class Parser {
     }
 
     resolve(selector, buffer, loader) {
-        var identifier, target, fullName, defaultNs = this.scope.$data.namespace;
+        var target, fullName, defaultNs = this.scope.$data.namespace;
 
         if (buffer[selector] !== undefined) {
             target = buffer[selector];
         } else {
             fullName = utils.convertToHumpName(selector, '-');
-            identifier = this.injector.parseFullName(fullName, this.using);
-
-            if (identifier.cls) {
-                buffer[selector] = identifier.cls;
-            } else {
-                target = this.injector[loader](identifier.key, identifier.ns || defaultNs);
-                buffer[selector] = target;
-            }
+            target = this.injector.parseComponent(fullName, this.using, defaultNs);
+            buffer[selector] = target;
         }
 
         return target;

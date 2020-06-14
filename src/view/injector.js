@@ -3,7 +3,7 @@ import { roles } from './roles';
 import { isComponent, isDirective, isService, isFilter } from './view-api';
 
 var keyPattern = /^[a-z][a-zA-Z0-9]*$/;
-var globalNamespace ='automate';
+var globalNamespace = 'automate';
 
 class NamespaceContainer {
     constructor() {
@@ -214,7 +214,7 @@ export class Injector {
     }
 
     createComponent(keyOrConstructor, namespace) {
-       return this.create(roles.component, keyOrConstructor, namespace);
+        return this.create(roles.component, keyOrConstructor, namespace);
     }
 
     createDirective(keyOrConstructor, namespace) {
@@ -272,10 +272,36 @@ export class Injector {
         return result;
     }
 
+    parseConstructor(getter, name, using, defaultNs) {
+        var identifier = this.parseFullName(name, using);
+
+        if (identifier.cls) {
+            return identifier.cls;
+        }
+
+        return this[getter](identifier.key, identifier.ns || defaultNs);
+    }
+
+    parseComponent(name, using, defaultNs) {
+        return this.parseConstructor('getComponent', name, using, defaultNs);
+    }
+
+    parseDirective(name, using, defaultNs) {
+        return this.parseConstructor('getDirective', name, using, defaultNs);
+    }
+
+    parseService(name, using, defaultNs) {
+        return this.parseConstructor('getService', name, using, defaultNs);
+    }
+
+    parseFilter(name, using, defaultNs) {
+        return this.parseConstructor('getFilter', name, using, defaultNs);
+    }
+
     injectServices(instance, metadata, checkLoopDependency) {
         var self = this, serviceFullName, hasLoopDependency = false;
 
-        if(checkLoopDependency) {
+        if (checkLoopDependency) {
             // creating a service instance at the moment
             serviceFullName = utils.format('{0}.{1}', utils.lowercase(metadata.namespace), metadata.key);
             hasLoopDependency = this.serviceStack.indexOf(serviceFullName) !== -1;
@@ -295,15 +321,13 @@ export class Injector {
         if (metadata && utils.isObject(metadata.inject)) {
             utils.forEach(metadata.inject, function (service, key) {
                 if (utils.isString(service)) {
-                    var identifier = self.parseFullName(service, metadata.using);
-                    instance[key] = self.createService(identifier.key, identifier.ns || metadata.namespace);
-                } else {
-                    instance[key] = self.createService(service);
+                    service = self.parseService(service, metadata.using, metadata.namespace);
                 }
+                instance[key] = self.createService(service);
             });
         }
 
-        if(checkLoopDependency) {
+        if (checkLoopDependency) {
             this.serviceStack.pop();
         }
     }

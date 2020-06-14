@@ -8,3 +8,4 @@ export * from './view';
 export * from './decorator';
 export * from './directive';
 export * from './component';
+export * from './service';
