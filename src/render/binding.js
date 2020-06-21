@@ -75,6 +75,10 @@ export class Binding {
     }
 
     detect() {
+        if (this.assignment || this.logical) {
+            return;
+        }
+        
         var newValue = this.compute();
 
         if (this.value != newValue) {

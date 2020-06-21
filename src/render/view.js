@@ -1,4 +1,5 @@
 import * as utils from '../utils';
+import { events } from '../core';
 
 class View {
     constructor() {
@@ -6,6 +7,7 @@ class View {
         this.bindings = [];
         this.directives = [];
         this.components = [];
+        this.unsubscribe = events.refreshView.on(() => this.refresh());
     }
 
     mount(selectorOrElement) {
@@ -21,23 +23,19 @@ class View {
         element.appendChild(this.content);
     }
 
-    // bindTranslateChanged() {
-    //     var bindings = this.entity.bindings;
-    //
-    //     if(!bindings.length) {
-    //         return;
-    //     }
-    //
-    //     // update text while translate changed
-    //     this.unbindTranslateChanged = events.translateChanged.on(() => {
-    //         bindings.forEach(binding => {
-    //             binding.detect();
-    //             binding.patch();
-    //         });
-    //     });
-    // }
+    refresh() {
+        if (!this.bindings.length) {
+            return;
+        }
+
+        this.bindings.forEach(binding => {
+            binding.detect();
+            binding.patch();
+        });
+    }
 
     destroy() {
+        this.unsubscribe();
         this.onDestroy && this.onDestroy();
 
         this.components.forEach(item => item.$destroy());
