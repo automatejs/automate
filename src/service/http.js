@@ -81,7 +81,7 @@ export class HttpService extends Service {
             xhr.onload = function () {
                 // Prepare the response
                 var responseHeaders = 'getAllResponseHeaders' in xhr ? self.getHttpResponseHeaders(xhr.getAllResponseHeaders()) : null;
-                var responseData = !config.responseType || config.responseType === 'text' ? xhr.responseText : xhr.response;
+                var responseData = !config.responseType || config.responseType === 'text' ? JSON.parse(xhr.responseText) : xhr.response;
                 var response = {
                     data: responseData,
                     status: xhr.status,
